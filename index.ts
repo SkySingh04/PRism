@@ -38,9 +38,10 @@ export default async (app: {
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
             const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
-            app.log.info(JSON.stringify(llmOutput), "LLM analysis complete");
-            // await reviewPR(context, app, llmOutput);
-            await reviewPR(context, app);
+            // const stringllmOutput = await JSON.stringify(llmOutput);
+            // app.log.info(JSON.stringify(stringllmOutput), "LLM analysis complete");
+            await reviewPR(context, app, llmOutput);
+            // await reviewPR(context, app);
             
             await handleKeployWorkflowTrigger(context);  
             await handleSecurityWorkflowTrigger(context);

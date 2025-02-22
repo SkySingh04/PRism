@@ -1,8 +1,16 @@
 // diffParser.ts
 import parseDiff from 'parse-diff';
 
-// export async function reviewPR(context: any, app: any, llmOutput: any) {
-export async function reviewPR(context: any, app: any) {
+
+async function parseGitDiffFromLLMOutput(llmOutput: any) {
+    const diffStart = llmOutput.indexOf('```diff');
+    const diffEnd = llmOutput.indexOf('```', diffStart + 1);
+    return llmOutput.substring(diffStart, diffEnd);
+}
+
+
+export async function reviewPR(context: any, app: any, llmOutput: any) {
+// export async function reviewPR(context: any, app: any) {
     //trim the llmOutput to only include the diff
     // const gitDiff = parseGitDiffFromLLMOutput(llmOutput);
     const gitDiff = `diff --git a/src/index.js b/src/index.js
