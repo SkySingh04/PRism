@@ -7,6 +7,9 @@ export async function getAllPrDetails(context: any, app: any) {
   // Extract issue number from PR body or title using regex
   const issueNumber = extractIssueNumber(pr.body || pr.title);
   const issueData = issueNumber ? await getLinkedIssueData(context, app, owner, repo, issueNumber) : null;
+  
+  // Get repository context
+  const repoContext = await getRepositoryContext(context, app);
 
   return {
       metadata: getPrMetadata(pr),
@@ -18,7 +21,8 @@ export async function getAllPrDetails(context: any, app: any) {
           labels: pr.labels?.map((l: { name: any }) => l.name) || []
       },
       code_changes: extractCodeChangesForLLM(app, filesResult),
-      linked_issue: issueData
+      linked_issue: issueData,
+      repository: repoContext
   };
 }
 
@@ -208,3 +212,45 @@ export async function getPrFilesAndDiffs(context: any, app: any, owner: string, 
   
     return { added, removed };
   }
+
+async function getRepositoryContext(context: any, app: any) {
+  const { owner, repo } = context.repo();
+  try {
+    // Fetch README content
+    const readmeResponse = await context.octokit.repos.getReadme({
+      owner,
+      repo,
+      mediaType: {
+        format: 'raw',
+      },
+    });
+    
+    // Fetch repository structure using git trees
+    const repoStructure = await context.octokit.git.getTree({
+      owner,
+      repo,
+      tree_sha: 'HEAD',
+      recursive: 'true'
+    });
+
+    const folderStructure = repoStructure.data.tree
+      .filter((item: any) => !item.path.includes('node_modules/')) // Exclude node_modules
+      .map((item: any) => item.path)
+      .join('\n');
+
+    return {
+      readme: readmeResponse.data,
+      structure: folderStructure,
+      name: repo,
+      owner: owner
+    };
+  } catch (error) {
+    app.log.error('Error fetching repository context:', error);
+    return {
+      readme: 'Failed to fetch README',
+      structure: 'Failed to fetch structure',
+      name: repo,
+      owner: owner
+    };
+  }
+}
