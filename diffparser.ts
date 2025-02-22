@@ -1,6 +1,5 @@
 // diffParser.ts
 import parseDiff from 'parse-diff';
-import { start } from 'repl';
 
 // export async function reviewPR(context: any, app: any, llmOutput: any) {
 export async function reviewPR(context: any, app: any) {
@@ -58,35 +57,23 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
     const { pull_request, repository } = context.payload;
 
     for (const file of parsedFiles) {
-        // Skip deleted files
         if (file.to === '/dev/null') {
             app.log.info(`Skipping deleted file: ${file.from}`);
             continue;
         }
 
-        const filePath = file.to || file.from; // Use the new file path if available, otherwise the old one
+        const filePath = file.to || file.from;
 
         for (const chunk of file.chunks) {
-            // Extract the diff hunk for this chunk
-            const diffHunk = chunk.content;
+            const diffHunk = chunk.content; // The full chunk content is the diff hunk
 
             for (const change of chunk.changes) {
-                if (change.type !== 'add' && change.type !== 'del') continue;
+                if (change.type !== 'add') continue; // Focus on additions for comments
 
-                // Determine the line number for the comment
-                const line = change.type === 'add' ? change.ln! : change.ln!;
-
-                // Prepare the comment body
+                const line = change.ln; // Use the added line number
                 const content = change.content.slice(1).trim();
-                const body =
-                    change.type === 'add'
-                        ? `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``
-                        : `Suggested deletion: ${content}`;
-                        // start_line: 1,
-                        // start_side: 'RIGHT',
-                        // line: 2,
-                        // side: 'RIGHT',
-                        
+                const body = `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``;
+
                 try {
                     await context.octokit.pulls.createReviewComment({
                         owner: repository.owner.login,
@@ -94,17 +81,16 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         pull_number: pull_request.number,
                         commit_id: pull_request.head.sha,
                         path: filePath,
-                        side: change.type === 'add' ? 'RIGHT' : 'LEFT', // Specify the side of the diff
+                        side: 'RIGHT', // Comments are on the 'RIGHT' side for additions
+                        line, // Line number for unified diff
+                        diff_hunk: diffHunk, // Full context of the hunk
                         body,
-                        diff_hunk: diffHunk,
-                        position: line,
-                        line,
-                        in_reply_to : null,
-                        subject_type: 'line'
                     });
                     app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error: any) {
-                    app.log.error(`Failed to create comment: ${error.message}`);
+                    app.log.error(
+                        `Failed to create comment for ${filePath} line ${line}: ${error.message}`
+                    );
                 }
             }
         }
