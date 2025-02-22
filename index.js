@@ -27,7 +27,7 @@ export default (app) => {
       
       await handleKeployWorkflowTrigger(context);
     } catch (error) {
-      await handleError(context, error);
+      await handleError(context, app, error);
     }
   };
   app.on(["pull_request.opened", "pull_request.synchronize"], handlePrEvent);
