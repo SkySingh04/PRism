@@ -10,7 +10,6 @@ import { handlePrAnalysis } from "./llm.js";
 import { handleKeployWorkflowTrigger } from "./keploy.js";
 import { handleError } from "./utils.js";
 import { handleSecurityWorkflowTrigger } from "./security.js";
-import { handleIssueEvent } from "./issue.js";
 import { promptUserConfig } from './src/cli.js';
 
 let config: any;
@@ -45,7 +44,4 @@ export default async (app: {
     };
 
     app.on(["pull_request.opened", "pull_request.synchronize"], handlePrEvent);
-    app.on(["issues.opened", "issues.edited"], async (context) => {
-        await handleIssueEvent(context, app);
-    });
 };

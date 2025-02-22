@@ -3,6 +3,10 @@ export async function getAllPrDetails(context: any, app: any) {
   const { pull_request: pr } = context.payload;
   const { owner, repo } = context.repo();
   const filesResult = await getPrFilesAndDiffs(context, app, owner, repo, pr.number);
+  
+  // Extract issue number from PR body or title using regex
+  const issueNumber = extractIssueNumber(pr.body || pr.title);
+  const issueData = issueNumber ? await getLinkedIssueData(context, app, owner, repo, issueNumber) : null;
 
   return {
       metadata: getPrMetadata(pr),
@@ -13,8 +17,50 @@ export async function getAllPrDetails(context: any, app: any) {
           assignees: pr.assignees?.map((u: { login: any }) => u.login) || [],
           labels: pr.labels?.map((l: { name: any }) => l.name) || []
       },
-      code_changes: extractCodeChangesForLLM(app, filesResult) // Pass the filesResult here
+      code_changes: extractCodeChangesForLLM(app, filesResult),
+      linked_issue: issueData
   };
+}
+
+function extractIssueNumber(text: string): number | null {
+  // Look for patterns like "fixes #123", "closes #123", "related to #123"
+  const match = text?.match(/#(\d+)/);
+  return match ? parseInt(match[1]) : null;
+}
+
+async function getLinkedIssueData(context: any, app: any, owner: string, repo: string, issueNumber: number) {
+  try {
+      const issue = await context.octokit.issues.get({
+          owner,
+          repo,
+          issue_number: issueNumber
+      });
+
+      const comments = await context.octokit.paginate(
+          context.octokit.issues.listComments,
+          { owner, repo, issue_number: issueNumber }
+      );
+
+      return {
+          number: issueNumber,
+          title: issue.data.title,
+          body: issue.data.body,
+          state: issue.data.state,
+          author: issue.data.user.login,
+          created_at: issue.data.created_at,
+          updated_at: issue.data.updated_at,
+          labels: issue.data.labels.map((l: { name: any }) => l.name),
+          assignees: issue.data.assignees.map((a: { login: any }) => a.login),
+          comments: comments.map((c: any) => ({
+              author: c.user.login,
+              body: c.body,
+              created_at: c.created_at
+          }))
+      };
+  } catch (error) {
+      app.log.error('Error fetching linked issue data:', error);
+      return null;
+  }
 }
 
 // Update extractCodeChangesForLLM to handle the files array directly
