@@ -6,6 +6,12 @@ export async function handleSecurityWorkflowTrigger(context: { repo: () => { own
       await context.octokit.repos.getContent({
         owner, repo, path: 'keploy', ref
       });
+
+      await context.octokit.issues.createComment({
+        ...context.repo(),
+        issue_number: context.payload.pull_request.number,
+        body: 'Running security check'
+      });
       
       await context.octokit.actions.createWorkflowDispatch({
         owner, repo, workflow_id: 'security.yaml', ref
