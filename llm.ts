@@ -8,11 +8,27 @@ import { addPRLabel } from './labeladder.js';
 
 export async function handlePrAnalysis(
   context: { 
-    octokit: { issues: { createComment: (arg0: any) => any; }; }; 
-    repo: () => any; 
-    payload: { pull_request: { number: any; }; }; 
+    octokit: { 
+      issues: { 
+        createComment: (arg0: any) => any;
+        addLabels: (params: any) => Promise<any>;
+      }; 
+      pulls: {
+        get: (params: any) => Promise<any>;
+        createReviewComment: (params: any) => Promise<any>;
+      };
+    }; 
+    repo: () => { owner: string; repo: string }; 
+    payload: { 
+      pull_request: { 
+        number: number; 
+      }; 
+    }; 
   }, 
-  prData: any, API : string, model: string , app: any
+  prData: any, 
+  API: string, 
+  model: string, 
+  app: any
 ) {
   // Load current configuration
   const config = loadConfig();
