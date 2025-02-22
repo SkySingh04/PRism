@@ -12,7 +12,7 @@ export async function getAllPrDetails(context) {
         assignees: pr.assignees?.map(u => u.login) || [],
         labels: pr.labels?.map(l => l.name) || []
       },
-      code_changes: extractCodeChangesForLLM(prData)
+      code_changes: extractCodeChangesForLLM(pr)
     };
   }
 
