@@ -12,16 +12,20 @@
     "probot-app"
   ],
   "scripts": {
-    "start": "probot run ./index.js",
-    "test": "node --test"
+    "start": "tsc && probot run ./dist/index.js",
+    "test": "node --test dist/**/*.js",
+    "dev": "ts-node-dev --respawn --transpile-only ./index.ts"
   },
-  
   "dependencies": {
     "probot": "^13.0.1"
   },
   "devDependencies": {
+    "@types/node": "^22.13.5",
     "nock": "^14.0.0- .5",
-    "smee-client": "^2.0.0"
+    "smee-client": "^2.0.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">= 18"

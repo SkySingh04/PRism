@@ -1,5 +1,5 @@
 // Core data collection functions
-export async function getAllPrDetails(context , app) {
+export async function getAllPrDetails(context: { payload: { pull_request: any; }; repo: () => { owner: any; repo: any; }; } , app: { log: { info: (arg0: string, arg1: string | undefined) => void; }; on: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }) {
     const { pull_request: pr } = context.payload;
     const { owner, repo } = context.repo();
   
@@ -8,16 +8,16 @@ export async function getAllPrDetails(context , app) {
       comments: await getPrComments(context, app, owner, repo, pr.number),
       files: await getPrFilesAndDiffs(context,app, owner, repo, pr.number),
       relationships: {
-        requested_reviewers: pr.requested_reviewers?.map(u => u.login) || [],
-        assignees: pr.assignees?.map(u => u.login) || [],
-        labels: pr.labels?.map(l => l.name) || []
+        requested_reviewers: pr.requested_reviewers?.map((u: { login: any; }) => u.login) || [],
+        assignees: pr.assignees?.map((u: { login: any; }) => u.login) || [],
+        labels: pr.labels?.map((l: { name: any; }) => l.name) || []
       },
-      code_changes: extractCodeChangesForLLM(pr)
+      code_changes: extractCodeChangesForLLM(app , pr)
     };
   }
 
 
-  function getPrMetadata(pr) {
+  function getPrMetadata(pr : any) {
     return {
       title: pr.title,
       body: pr.body,
@@ -41,7 +41,7 @@ export async function getAllPrDetails(context , app) {
     };
   }
   
-  export async function getPrComments(context, app, owner, repo, prNumber) {
+  export async function getPrComments(context: { payload?: { pull_request: any; }; repo?: () => { owner: any; repo: any; }; octokit?: any; }, app: { log: any; on?: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }, owner: any, repo: any, prNumber: any) {
     try {
       const [issueComments, reviewComments] = await Promise.all([
         context.octokit.paginate(context.octokit.issues.listComments, {
@@ -62,7 +62,7 @@ export async function getAllPrDetails(context , app) {
     }
   }
 
-  function formatComment(comment) {
+  function formatComment(comment : any) {
   return {
     id: comment.id,
     user: comment.user?.login,
@@ -73,14 +73,14 @@ export async function getAllPrDetails(context , app) {
   };
 }
 
-export async function getPrFilesAndDiffs(context, app, owner, repo, prNumber) {
+export async function getPrFilesAndDiffs(context: { payload?: { pull_request: any; }; repo?: () => { owner: any; repo: any; }; octokit?: any; }, app: { log: any; on?: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }, owner: any, repo: any, prNumber: any) {
     try {
       const files = await context.octokit.paginate(
         context.octokit.pulls.listFiles,
         { owner, repo, pull_number: prNumber }
       );
   
-      return files.map(file => ({
+      return files.map((file : any) => ({
         filename: file.filename,
         status: file.status,
         additions: file.additions,
@@ -94,7 +94,7 @@ export async function getPrFilesAndDiffs(context, app, owner, repo, prNumber) {
     }
   }
 
-  export function extractCodeChangesForLLM(prData) {
+  export function extractCodeChangesForLLM(app : any, prData : any) {
     app.log.info( "Full PR data collected");
     app.log.info(prData);
     const { files } = prData;
@@ -104,11 +104,11 @@ export async function getPrFilesAndDiffs(context, app, owner, repo, prNumber) {
     const codeFileExtensions = ['.js', '.py', '.java', '.cpp', '.ts', '.go', '.rs', '.php', '.rb'];
     
     const codeChanges = files
-      .filter(file => {
+      .filter((file : any) => {
         const ext = '.' + file.filename.split('.').pop().toLowerCase();
         return codeFileExtensions.includes(ext);
       })
-      .map(file => {
+      .map((file: any) => {
         // Parse the patch to separate additions and deletions
         const changes = parsePatch(file.patch);
         
@@ -129,23 +129,23 @@ export async function getPrFilesAndDiffs(context, app, owner, repo, prNumber) {
     return {
       summary: {
         files_changed: codeChanges.length,
-        total_additions: codeChanges.reduce((sum, file) => sum + file.stats.additions, 0),
-        total_deletions: codeChanges.reduce((sum, file) => sum + file.stats.deletions, 0)
+        total_additions: codeChanges.reduce((sum: any, file: { stats: { additions: any; }; }) => sum + file.stats.additions, 0),
+        total_deletions: codeChanges.reduce((sum: any, file: { stats: { deletions: any; }; }) => sum + file.stats.deletions, 0)
       },
       changes: codeChanges
     };
   }
   
-  function parsePatch(patch) {
+  function parsePatch(patch : any) {
     if (!patch || patch === 'Diff too large to display') {
       return { added: [], removed: [] };
     }
   
     const lines = patch.split('\n');
-    const added = [];
-    const removed = [];
+    const added: any[] = [];
+    const removed: any[] = [];
   
-    lines.forEach(line => {
+    lines.forEach((line: any) => {
       if (line.startsWith('+') && !line.startsWith('+++')) {
         added.push(line.substring(1));
       } else if (line.startsWith('-') && !line.startsWith('---')) {
