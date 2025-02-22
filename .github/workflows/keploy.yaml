@@ -77,29 +77,8 @@ jobs:
           BUILD_DELAY: ${{ github.event.inputs.build-delay }}
         run: |
           cd "$WORKING_DIR"
-          
-          if [[ "$COMMAND" =~ .*"go".* ]]; then
-            go mod download
-            go build -o application
-            sudo -E keploy test -c "./application" --delay "$DELAY" --path "$KEPLOY_PATH"
-          elif [[ "$COMMAND" =~ .*"node".* ]]; then
-            npm install
-            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH"
-          elif [[ "$COMMAND" =~ .*"java".* ]] || [[ "$COMMAND" =~ .*"mvn".* ]]; then
-            mvn clean install
-            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH"
-          elif [[ "$COMMAND" =~ .*"python".* ]]; then
-            pip install -r requirements.txt
-            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH"
-          elif [[ "$COMMAND" =~ .*"docker compose".* ]] || [[ "$COMMAND" =~ .*"docker-compose".* ]]; then
-            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH" --containerName "$CONTAINER_NAME" --buildDelay "${BUILD_DELAY:-50s}"
-          elif [[ "$COMMAND" =~ .*"docker".* ]]; then
-            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH" --buildDelay "${BUILD_DELAY:-50s}"
-          else
-            echo "Error: Unsupported command type - $COMMAND"
-            exit 1
-          fi
-          
+          go mod download
+          sudo -E keploy test -c "go run main.go" --delay "$DELAY" --path "$KEPLOY_PATH"          
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total tests: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_tests.out
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test passed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_passed.out
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test failed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_failed.out
