@@ -8,7 +8,7 @@ export async function handlePrAnalysis(
     repo: () => any; 
     payload: { pull_request: { number: any; }; }; 
   }, 
-  prData: any
+  prData: any, API : string
 ) {
   // Load current configuration
   const config = loadConfig();
@@ -34,7 +34,7 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   const code_changes = JSON.stringify(prData.code_changes, null, 2); // Adding indentation for better readability
 
   // Build the analysis comment
-  const analysis = `PR Analysis using ${selectedModel}:
+  const analysis = `PR Analysis using ${API}:
   Title: ${prData.metadata.title}
   Author: ${prData.metadata.author}
   Files Changed: ${prData.metadata.changed_files}
@@ -62,12 +62,12 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   });
 
   // call the LLM analysis function with selected model
-  await analyzeLLM(prData, rules.rules, selectedModel);
+  await analyzeLLM(prData, rules.rules , API);
 }
 
 
-export async function analyzeLLM(prData: any, rules: any, model: string) {
-  console.log(`Using Hugging Face model: ${model}`);
+export async function analyzeLLM(prData: any, rules: any, API: string) {
+  console.log(`Using Hugging Face API: ${API}`);
   // Analyze the PR data against the rules
   // For now, we are just logging the rules and the PR data
   console.log('Rules:', rules);

@@ -13,7 +13,7 @@ import { handleSecurityWorkflowTrigger } from "./security.js";
 import { handleIssueEvent } from "./issue.js";
 import { promptUserConfig } from './src/cli.js';
 
-let selectedModel: string;
+let config: any;
 
 export default async (app: {
     log: { info: (arg0: string, arg1?: string) => void };
@@ -21,7 +21,7 @@ export default async (app: {
 }) => {
     try {
         // Get user configuration through CLI
-        const config = await promptUserConfig();
+        config = await promptUserConfig();
         // selectedModel = config.model;
         app.log.info(`Initialized with API url: ${config.apiEndpoint} for use case: ${config.useCase}`);
     } catch (error) {
@@ -36,7 +36,7 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            await handlePrAnalysis(context, prData);
+            await handlePrAnalysis(context, prData , config.apiEndpoint);
             await handleKeployWorkflowTrigger(context);
             await handleSecurityWorkflowTrigger(context);
         } catch (error) {
