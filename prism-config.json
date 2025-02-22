@@ -1,0 +1,4 @@
+{
+  "useCase": "Security Analysis",
+  "apiEndpoint": "http://localhost:11434/api/generate"
+}

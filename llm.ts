@@ -1,4 +1,6 @@
-import {getRulesForLLM} from './rules.js';
+import { getRulesForLLM } from './rules.js';
+import { loadConfig } from './src/config/userConfig.js';
+import { useCaseModels } from './src/config/models.js';
 
 export async function handlePrAnalysis(
   context: { 
@@ -8,6 +10,26 @@ export async function handlePrAnalysis(
   }, 
   prData: any
 ) {
+  // Load current configuration
+  const config = loadConfig();
+  const useCase = config ? useCaseModels[config.useCase] : null;
+
+  // Build the config info comment
+  const configInfo = `## PRism Configuration
+Use Case: ${config?.useCase || 'Not configured'}
+API Endpoint: ${config?.apiEndpoint || 'Not configured'}
+
+### Suggested Models for ${useCase?.name || 'current use case'}:
+${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('\n') || 'No models configured'}
+`;
+
+  // Post config info
+  await context.octokit.issues.createComment({
+    ...context.repo(),
+    issue_number: context.payload.pull_request.number,
+    body: configInfo,
+  });
+
   // Convert the code changes to a JSON string
   const code_changes = JSON.stringify(prData.code_changes, null, 2); // Adding indentation for better readability
 
@@ -28,7 +50,7 @@ export async function handlePrAnalysis(
   ` : 'No linked issue found';
 
   // Build the analysis comment
-  const analysis = `PR Analysis:
+  const analysis = `PR Analysis using ${selectedModel}:
   Title: ${prData.metadata.title}
   Author: ${prData.metadata.author}
   Files Changed: ${prData.metadata.changed_files}
@@ -57,12 +79,12 @@ export async function handlePrAnalysis(
     body: rules.success ? rules.rules : rules.error,
   });
 
-  // call the LLM analysis function
-  await analyzeLLM(prData, rules.rules);
+  // call the LLM analysis function with selected model
+  await analyzeLLM(prData, rules.rules, selectedModel);
 }
 
 
-export async function analyzeLLM(prData: any, rules: any) {
+export async function analyzeLLM(prData: any, rules: any, model: string) {
   // Include issue context in LLM analysis
   const analysisContext = {
     pr: prData,
@@ -79,5 +101,9 @@ export async function analyzeLLM(prData: any, rules: any) {
   };
 
   console.log('Analysis Context:', analysisContext);
-  // TODO: Implement actual LLM analysis with the enhanced context
+  console.log(`Using Hugging Face model: ${model}`);
+  // Analyze the PR data against the rules
+  // For now, we are just logging the rules and the PR data
+  console.log('Rules:', rules);
+  console.log('PR Data:', prData);
 }
