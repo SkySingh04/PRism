@@ -1,7 +1,14 @@
 name: Run test-cases
 on:
   workflow_dispatch:
-
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  
 jobs:
   run_test_cases:
     runs-on: ubuntu-latest
