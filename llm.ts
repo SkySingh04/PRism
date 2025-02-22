@@ -119,9 +119,6 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   const stringanalysisContext = JSON.stringify(analysisContext, null, 2);
   
   const prompt = `
-  Repository Context:
-  Name: ${prData.repository.name}
-  Owner: ${prData.repository.owner}
   
   Project Structure:
   ${prData.repository.structure}
@@ -188,7 +185,8 @@ For fixes, use \`diff\` code blocks, marking changes with \`+\` or \`-\`. The li
   given context and refrain from making broad comments about potential impacts on 
   the system or question intentions behind the changes.
 - Do NOT write anything else in the output, just the review comments or LGTM!.
-
+- DO NOT TAKE CONTEXT FROM PREVIOUS CONTEXT. ONLY USE THE CONTEXT PROVIDED IN THE CURRENT PROMPT.
+- LIMIT YOUR RESPONSE TO ONLY LGTM OR THE DIFF, DO NOT GO ON YAPPING AND LIMIT YOUR REVIEW COMMENTS TO ONLY 50 WORDS AND THE DIFF
 If there are no issues found on a line range, you MUST respond with the 
 text \`LGTM!\` for that line range in the review section. 
 
