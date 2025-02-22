@@ -7,9 +7,6 @@ class WrongCalculator {
         return a / b; // Subtraction becomes division
     }
 
-    multiply(a, b) {
-        return a - b; // Multiplication becomes subtraction
-    }
 
     divide(a, b) {
         return a + b; // Division becomes addition
