@@ -1,4 +1,5 @@
 {
-  "useCase": "Code Review",
-  "apiEndpoint": "http://localhost:11434/api/generate"
+  "useCase": "Performance Optimization",
+  "apiEndpoint": "https://a6dc-122-166-68-175.ngrok-free.app/api/generate",
+  "selectedModel": "llama3"
 }

@@ -1,6 +1,6 @@
 import inquirer from 'inquirer';
 import { useCaseModels } from './config/models.js';
-import { loadConfig, saveConfig, UserConfig } from './config/userConfig.js';
+import { ModelInfo, loadConfig, saveConfig, UserConfig } from './config/userConfig.js';
 import chalk from 'chalk';  // This will be fixed by package.json update
 
 export async function promptUserConfig(): Promise<UserConfig> {
@@ -33,12 +33,15 @@ export async function promptUserConfig(): Promise<UserConfig> {
     console.log(chalk.gray('\nNote: These are suggestions based on your use case.\n'));
 
     // After displaying suggested models, ask for model selection
-    // const { selectedModel } = await inquirer.prompt([{
-    //     type: 'list',
-    //     name: 'selectedModel',
-    //     message: 'Select a model to use:',
-    //     choices: selectedUseCase.suggestedModels
-    // }]);
+    const { selectedModel } = await inquirer.prompt<{ selectedModel: string }>([{
+        type: 'input',
+        name: 'selectedModel',
+        message: 'Select a model to use:',
+        choices: selectedUseCase.suggestedModels.map(model => ({
+            name: model.name,
+            value: model.name  
+        }))
+    }]);
 
     // Get API endpoint
     const { apiEndpoint } = await inquirer.prompt([{
@@ -55,7 +58,8 @@ export async function promptUserConfig(): Promise<UserConfig> {
 
     const config: UserConfig = {
         useCase,
-        apiEndpoint
+        apiEndpoint,
+        selectedModel,
     };
 
     // Save configuration

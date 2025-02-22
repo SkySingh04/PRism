@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
@@ -11,7 +12,7 @@ export async function handlePrAnalysis(
     repo: () => any; 
     payload: { pull_request: { number: any; }; }; 
   }, 
-  prData: any, API : string
+  prData: any, API : string, model: string
 ) {
   // Load current configuration
   const config = loadConfig();
@@ -83,12 +84,12 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   });
 
   // call the LLM analysis function with selected model
-  const llmOutput = await analyzeLLM(prData, rules.rules , API );
+  const llmOutput = await analyzeLLM(prData, rules.rules , API  , model);
   return llmOutput;
 }
 
 
-export async function analyzeLLM(prData: any, rules: any, API: string) {
+export async function analyzeLLM(prData: any, rules: any, API: string, model: string) {
   // Include issue context in LLM analysis
   const analysisContext = {
     pr: prData,
@@ -103,12 +104,34 @@ export async function analyzeLLM(prData: any, rules: any, API: string) {
       issue_discussion: prData.linked_issue.comments
     } : null
   };
-  try {
-    // Assume getLLMResponse fetches the git diff from your LLM
-    // const llmOutput = await getLLMResponse(analysisContext, apiEndpoint);
-    // return llmOutput;
-} catch (error : any) {
-    throw new Error(`Failed to analyze LLM: ${error.message}`);
+  console.log('Analysis Context:', analysisContext);
+  console.log(`Using Hugging Face API: ${API}`);
+  console.log(`Using LLM model: ${model}`);
+  console.log('Rules:', rules);
+  console.log('PR Data:', prData);
+
+  const prompt = `
+  Here is some context about the PR made: ${prData}.
+
+  Suggest the changes in the format of how git diff shows the changes.
+
+  I must be able to parse the data and show it to the user.
+  `
+
+  // Call the API with the analysis context
+  const response = await axios.post(API, {
+    model: model,
+    context: analysisContext
+  });
+
+  console.log('API Response:', response.data);
+
+  await prData.octokit.issues.createComment({
+    ...prData.repo(),
+    issue_number: prData.payload.pull_request.number,
+    body: `## LLM Analysis
+    ${response.data}`
+  });
 }
 }
 
