@@ -127,8 +127,9 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   
 
   You must follow the following pattern, in the format of a git diff: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
-  This is just a sample, do not copy and paste this. Only suggest a change when you're 95% sure it's correct.
-  
+  This is just a sample, do not copy and paste this.
+  I need the result value in a git diff format, please do it like this.
+
   Suggested change:
   diff --git a/src/index.js b/src/index.js
 index abc1234..def5678 100644
