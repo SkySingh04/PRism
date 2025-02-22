@@ -1,5 +1,5 @@
 {
   "useCase": "Performance Optimization",
-  "apiEndpoint": "https://a6dc-122-166-68-175.ngrok-free.app/api/generate",
+  "apiEndpoint": "https://c85a-122-166-68-175.ngrok-free.app/api/generate",
   "selectedModel": "llama3"
 }

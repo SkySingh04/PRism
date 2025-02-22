@@ -2,6 +2,9 @@ import axios from 'axios';
 import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
+// import { createInlineCommentsFromDiff } from './diffparser.js';
+import { handleError } from './utils.js';
+
 
 export async function handlePrAnalysis(
   context: { 
@@ -9,7 +12,7 @@ export async function handlePrAnalysis(
     repo: () => any; 
     payload: { pull_request: { number: any; }; }; 
   }, 
-  prData: any, API : string, model: string
+  prData: any, API : string, model: string , app: any
 ) {
   // Load current configuration
   const config = loadConfig();
@@ -81,11 +84,12 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   });
 
   // call the LLM analysis function with selected model
-  await analyzeLLM(prData, rules.rules , API, model);
+  const llmOutput = await analyzeLLM(prData, rules.rules , API  , model, app);
+  return llmOutput;
 }
 
-
-export async function analyzeLLM(prData: any, rules: any, API: string, model: string) {
+;
+export async function analyzeLLM(prData: any, rules: any, API: string, model: string , app : any) {
   // Include issue context in LLM analysis
   const analysisContext = {
     pr: prData,
@@ -100,11 +104,11 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
       issue_discussion: prData.linked_issue.comments
     } : null
   };
-  console.log('Analysis Context:', analysisContext);
-  console.log(`Using Hugging Face API: ${API}`);
-  console.log(`Using LLM model: ${model}`);
-  console.log('Rules:', rules);
-  console.log('PR Data:', prData);
+  app.log.info('Analysis Context:', analysisContext);
+  app.log.info(`Using Hugging Face API: ${API}`);
+  app.log.info(`Using LLM model: ${model}`);
+  app.log.info('Rules:', rules);
+  app.log.info('PR Data:', prData);
 
   const prompt = `
   Here is some context about the PR made: ${prData}.
@@ -117,10 +121,10 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   // Call the API with the analysis context
   const response = await axios.post(API, {
     model: model,
-    context: analysisContext
+    prompt
   });
 
-  console.log('API Response:', response.data);
+  app.context.info('API Response:', response.data);
 
   await prData.octokit.issues.createComment({
     ...prData.repo(),
@@ -129,3 +133,5 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
     ${response.data}`
   });
 }
+
+
