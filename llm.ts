@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
+import { addPRLabel } from './labeladder.js';
 // import { createInlineCommentsFromDiff } from './diffparser.js';
 
 
@@ -85,12 +86,12 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   // call the LLM analysis function with selected model
   const llmOutput = await analyzeLLM(prData, rules.rules , API  , model, app);
 
-  // await prData.octokit.issues.createComment({
-  //   ...prData.repo(),
-  //   issue_number: prData.payload.pull_request.number,
-  //   body: `## LLM Analysis
-  //   ${llmOutput}`
-  // });
+  // Extract label decision
+  const labelMatch = llmOutput.match(/LABEL_DECISION:\s*(LGTM|NEEDS_CHANGES|SPAM)/);
+  if (labelMatch) {
+    await addPRLabel(context, labelMatch[1]);
+  }
+  
   return llmOutput;
 }
 
@@ -237,11 +238,30 @@ There's a syntax error in the add function.
 -    retrn z
 +    return z
 \`\`\`
----
-24-25:
-LGTM!
-  `
-  
+
+  After your review, you must include exactly one label decision at the end in this format:
+  LABEL_DECISION: <DECISION>
+
+  Where <DECISION> must be one of:
+  - LGTM (if the changes look good and can be merged)
+  - NEEDS_CHANGES (if there are required changes or issues to fix)
+  - SPAM (if the PR appears to be spam or irrelevant)
+
+  Example complete response:
+  22-22:
+  Fix syntax error in function.
+  \`\`\`diff
+  -    retrn z
+  +    return z
+  \`\`\`
+  LABEL_DECISION: NEEDS_CHANGES
+
+  Or simply:
+  24-25:
+  LGTM!
+  LABEL_DECISION: LGTM
+  `;
+
   app.log.info('Analysis Context:', stringanalysisContext);
   app.log.info(`Using Hugging Face API: ${API}`);
   app.log.info(`Using LLM model: ${model}`);
