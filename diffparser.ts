@@ -1,7 +1,8 @@
 // diffParser.ts
 import parseDiff from 'parse-diff';
 
-export async function reviewPR(context: any, app: any, llmOutput: any) {
+// export async function reviewPR(context: any, app: any, llmOutput: any) {
+export async function reviewPR(context: any, app: any) {
     //trim the llmOutput to only include the diff
     // const gitDiff = parseGitDiffFromLLMOutput(llmOutput);
     const gitDiff = `diff --git a/src/index.js b/src/index.js
@@ -50,25 +51,33 @@ index 1234567..890abcd 100644
     // });
 }
 
+
 export async function createInlineCommentsFromDiff(diff: string, context: any, app: any) {
     const parsedFiles = parseDiff(diff);
     const { pull_request, repository } = context.payload;
 
     for (const file of parsedFiles) {
+        // Skip deleted files
+        if (file.to === '/dev/null') {
+            app.log.info(`Skipping deleted file: ${file.from}`);
+            continue;
+        }
+
+        const filePath = file.to || file.from; // Use the new file path if available, otherwise the old one
+
         for (const chunk of file.chunks) {
             for (const change of chunk.changes) {
                 if (change.type !== 'add' && change.type !== 'del') continue;
-                
-                if (file.to === '/dev/null') {
-                    app.log.info(`Skipping deleted file: ${file.from}`);
-                    continue;
-                }
 
-                const filePath = change.type === 'add' ? file.to! : file.from!;
+                // Determine the line number for the comment
+                const line = change.type === 'add' ? change.ln! : change.ln!;
+
+                // Prepare the comment body
                 const content = change.content.slice(1).trim();
-                const body = change.type === 'add'
-                    ? `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``
-                    : `Suggested deletion: ${content}`;
+                const body =
+                    change.type === 'add'
+                        ? `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``
+                        : `Suggested deletion: ${content}`;
 
                 try {
                     await context.octokit.pulls.createReviewComment({
@@ -77,11 +86,11 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         pull_number: pull_request.number,
                         commit_id: pull_request.head.sha,
                         path: filePath,
-                        position: change.ln,
+                        line, // Use the line number in the file
+                        side: change.type === 'add' ? 'RIGHT' : 'LEFT', // Specify the side of the diff
                         body,
-                        subject_type: 'file'
                     });
-                    app.log.info(`Created comment on ${filePath} line ${change.ln}`);
+                    app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error: any) {
                     app.log.error(`Failed to create comment: ${error.message}`);
                 }
@@ -89,4 +98,3 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
         }
     }
 }
-
