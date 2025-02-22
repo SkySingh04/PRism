@@ -3,7 +3,6 @@ describe('Math operations', () => {
         expect(add(2, 3)).toBe(5);
     });
 
-    
     test('subtract should return the difference', () => {
         expect(subtract(5, 3)).toBe(2);
     });

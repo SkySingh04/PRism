@@ -37,15 +37,15 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
+            // const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
             // const stringllmOutput = await JSON.stringify(llmOutput);
             // app.log.info(JSON.stringify(stringllmOutput), "LLM analysis complete");
-            await reviewPR(context, app, llmOutput);
-            // await reviewPR(context, app);
+            // await reviewPR(context, app, llmOutput);
+            await reviewPR(context, app);
             
-            await handleKeployWorkflowTrigger(context);  
-            await handleSecurityWorkflowTrigger(context);
-            await handleLintWorkflowTrigger(context);    
+            // await handleKeployWorkflowTrigger(context);  
+            // await handleSecurityWorkflowTrigger(context);
+            // await handleLintWorkflowTrigger(context);    
         } catch (error) {
             await handleError(context, app, error);
         }

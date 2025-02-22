@@ -1,5 +1,6 @@
 // diffParser.ts
 import parseDiff from 'parse-diff';
+import { start } from 'repl';
 
 
 async function parseGitDiffFromLLMOutput(llmOutput: any) {
@@ -9,8 +10,8 @@ async function parseGitDiffFromLLMOutput(llmOutput: any) {
 }
 
 
-export async function reviewPR(context: any, app: any, llmOutput: any) {
-// export async function reviewPR(context: any, app: any) {
+// export async function reviewPR(context: any, app: any, llmOutput: any) {
+export async function reviewPR(context: any, app: any) {
     //trim the llmOutput to only include the diff
     // const gitDiff = parseGitDiffFromLLMOutput(llmOutput);
     const gitDiff = `diff --git a/src/index.js b/src/index.js
@@ -87,13 +88,15 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         pull_number: pull_request.number,
                         commit_id: pull_request.head.sha,
                         path: filePath,
-                        side: 'RIGHT', // Comments on the RIGHT side for additions
-                        line,
                         body,
-                        // Enable comfort-fade preview to use line and side parameters
+                        line,
                         mediaType: {
-                            previews: ['comfort-fade']
-                        }
+                            previews: ['comfort-fade'], // Enable comfort-fade preview
+                        },
+                        // subject_type: 'line',
+                        // start_line: line,
+                        // start_side: 'RIGHT',
+                        // comfort_fade
                     });
                     app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error: any) {
