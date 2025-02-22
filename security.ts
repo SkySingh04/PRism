@@ -3,10 +3,6 @@ export async function handleSecurityWorkflowTrigger(context: { repo: () => { own
     const { ref } = context.payload.pull_request.head;
   
     try {
-      await context.octokit.repos.getContent({
-        owner, repo, path: 'keploy', ref
-      });
-
       await context.octokit.issues.createComment({
         ...context.repo(),
         issue_number: context.payload.pull_request.number,
