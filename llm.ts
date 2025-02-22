@@ -114,7 +114,7 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   app.log.info('PR Data:', prData);
 
   const prompt = `
-  Here is some context about the PR made: ${prData}.
+  Here is some context about the PR made: ${stringanalysisContext}.
 
   Suggest the changes in the format of how git diff shows the changes.
 
