@@ -9,6 +9,7 @@ import { getAllPrDetails } from "./pr.js";
 import { handlePrAnalysis } from "./llm.js";
 import { handleKeployWorkflowTrigger } from "./keploy.js";
 import { handleError } from "./utils.js";
+import { handleSecurityWorkflowTrigger } from "./security.js";
 
 // const {handleError } = require('./utils');
 // const {getAllPrDetails} = require('./pr');
@@ -26,6 +27,8 @@ export default (app: { log: { info: (arg0: string, arg1: string | undefined) => 
       await handlePrAnalysis(context, prData);
       
       await handleKeployWorkflowTrigger(context);
+
+      await handleSecurityWorkflowTrigger(context);
     } catch (error) {
       await handleError(context, app, error);
     }

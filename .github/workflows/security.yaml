@@ -1,0 +1,53 @@
+name: Security Scan with Trivy
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  security-scan:
+    name: Run Trivy Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          format: "table"
+          ignore-unfixed: true
+          output: trivy_report.txt
+
+      - name: Upload Trivy Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-report
+          path: trivy_report.txt
+
+      - name: Read Full Trivy Report
+        id: read_report
+        run: |
+          {
+            echo "REPORT<<EOF"
+            cat trivy_report.txt
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Comment Full Trivy Report on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## 🔍 Trivy Security Scan Results
+            ```
+            ${{ env.REPORT }}
+            ```
+          token: ${{ secrets.GITHUB_TOKEN }}
