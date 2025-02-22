@@ -1,6 +1,6 @@
-export async function handleSecurityWorkflowTrigger(context: { repo: () => { owner: any; repo: any; }; payload: { pull_request: { head: { ref: any; }; number: any; }; }; octokit: { repos: { getContent: (arg0: { owner: any; repo: any; path: string; ref: any; }) => any; }; actions: { createWorkflowDispatch: (arg0: { owner: any; repo: any; workflow_id: string; ref: any; }) => any; }; issues: { createComment: (arg0: any) => any; }; }; }) {
+export async function handleSecurityWorkflowTrigger(context: any) {
     const { owner, repo } = context.repo();
-    const { ref } = context.payload.pull_request.head;
+    const { base } = context.payload.pull_request;
   
     try {
       await context.octokit.issues.createComment({
@@ -10,7 +10,7 @@ export async function handleSecurityWorkflowTrigger(context: { repo: () => { own
       });
       
       await context.octokit.actions.createWorkflowDispatch({
-        owner, repo, workflow_id: 'security.yaml', ref
+        owner, repo, workflow_id: 'security.yaml', ref : base.ref
       });
     } catch (error : any) {
       if (error.status === 404) {
