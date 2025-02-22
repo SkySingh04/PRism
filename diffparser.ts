@@ -66,6 +66,9 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
         const filePath = file.to || file.from; // Use the new file path if available, otherwise the old one
 
         for (const chunk of file.chunks) {
+            // Extract the diff hunk for this chunk
+            const diffHunk = chunk.content;
+
             for (const change of chunk.changes) {
                 if (change.type !== 'add' && change.type !== 'del') continue;
 
@@ -89,6 +92,7 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         line, // Use the line number in the file
                         side: change.type === 'add' ? 'RIGHT' : 'LEFT', // Specify the side of the diff
                         body,
+                        diff_hunk: diffHunk, 
                     });
                     app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error: any) {
