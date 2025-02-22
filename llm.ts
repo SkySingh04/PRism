@@ -125,7 +125,7 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
 
   I must be able to parse the data and show it as github reviews.
 
-  You must follow the following pattern: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
+  You must follow the following pattern, in the format of a git diff: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
   
   Suggested change:
   diff --git a/src/index.js b/src/index.js
