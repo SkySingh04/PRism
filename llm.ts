@@ -104,11 +104,11 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
       issue_discussion: prData.linked_issue.comments
     } : null
   };
-  app.context.info('Analysis Context:', analysisContext);
-  app.context.info(`Using Hugging Face API: ${API}`);
-  app.context.info(`Using LLM model: ${model}`);
-  app.context.info('Rules:', rules);
-  app.context.info('PR Data:', prData);
+  app.log.info('Analysis Context:', analysisContext);
+  app.log.info(`Using Hugging Face API: ${API}`);
+  app.log.info(`Using LLM model: ${model}`);
+  app.log.info('Rules:', rules);
+  app.log.info('PR Data:', prData);
 
   const prompt = `
   Here is some context about the PR made: ${prData}.
