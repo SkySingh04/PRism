@@ -4,6 +4,7 @@ import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
 // import { createInlineCommentsFromDiff } from './diffparser.js';
 import { handleError } from './utils.js';
+import { json } from 'stream/consumers';
 
 
 export async function handlePrAnalysis(
@@ -104,7 +105,9 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
       issue_discussion: prData.linked_issue.comments
     } : null
   };
-  app.log.info('Analysis Context:', analysisContext);
+
+  const stringanalysisContext = JSON.stringify(analysisContext, null, 2);
+  app.log.info('Analysis Context:', stringanalysisContext);
   app.log.info(`Using Hugging Face API: ${API}`);
   app.log.info(`Using LLM model: ${model}`);
   app.log.info('Rules:', rules);
