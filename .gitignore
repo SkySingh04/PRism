@@ -8,3 +8,4 @@ lib
 scripts/create_pr_script.sh
 /dist
 
+myenv/

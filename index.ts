@@ -11,11 +11,24 @@ import { handleKeployWorkflowTrigger } from "./keploy.js";
 import { handleError } from "./utils.js";
 import { handleSecurityWorkflowTrigger } from "./security.js";
 import { handleIssueEvent } from "./issue.js";
+import { promptUserConfig } from './src/cli.js';
 
-export default (app: {
+let selectedModel: string;
+
+export default async (app: {
     log: { info: (arg0: string, arg1?: string) => void };
     on: (arg0: string[], arg1: (context: any) => Promise<void>) => void;
 }) => {
+    try {
+        // Get user configuration through CLI
+        const config = await promptUserConfig();
+        // selectedModel = config.model;
+        app.log.info(`Initialized with API url: ${config.apiEndpoint} for use case: ${config.useCase}`);
+    } catch (error) {
+        app.log.info("Failed to get user configuration");
+        process.exit(1);
+    }
+
     app.log.info("Yay, the app was loaded!");
 
     const handlePrEvent = async (context: any) => {

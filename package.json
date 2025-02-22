@@ -17,6 +17,8 @@
     "dev": "ts-node-dev --respawn --transpile-only ./index.ts"
   },
   "dependencies": {
+    "chalk": "^5.4.1",
+    "inquirer": "^12.4.2",
     "probot": "^13.0.1"
   },
   "devDependencies": {
