@@ -94,6 +94,7 @@ export async function createInlineCommentsFromDiff(diff: string, context: any , 
                         line,
                         side,
                         body,
+                        diff_hunk: chunk.content 
                     });
                     app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error : any) {
