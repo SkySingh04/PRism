@@ -3,10 +3,6 @@ export async function handleKeployWorkflowTrigger(context: { repo: () => { owner
     const { ref } = context.payload.pull_request.head;
   
     try {
-      await context.octokit.repos.getContent({
-        owner, repo, path: 'keploy', ref
-      });
-      
       await context.octokit.actions.createWorkflowDispatch({
         owner, repo, workflow_id: 'keploy.yaml', ref
       });
