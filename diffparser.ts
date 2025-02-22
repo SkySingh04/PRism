@@ -13,6 +13,8 @@ export async function reviewPR(context: any, app: any, llmOutput: any) {
 // export async function reviewPR(context: any, app: any) {
     //trim the llmOutput to only include the diff
     const gitDiff = await parseGitDiffFromLLMOutput(llmOutput);
+    app.log.info(`Parsed git diff: ${gitDiff}`);
+
 //     const gitDiff = `diff --git a/src/index.js b/src/index.js
 // index abc1234..def5678 100644
 // --- a/src/index.js

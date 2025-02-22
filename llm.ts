@@ -145,9 +145,9 @@ index abc1234..def5678 100644
     prompt
   });
 
-  const stringResp = await JSON.stringify(response.data, null, 2);
-  app.log.info('API Response:',stringResp);
-  return stringResp;
+  // const stringResp = await JSON.stringify(response.data, null, 2);
+  // app.log.info('API Response:',stringResp);
+  return response.data.response;
   
 }
 
