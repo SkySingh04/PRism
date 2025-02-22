@@ -6,4 +6,5 @@ npm-debug.log
 coverage
 lib
 scripts/create_pr_script.sh
+/dist
 

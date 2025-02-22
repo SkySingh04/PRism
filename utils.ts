@@ -1,4 +1,4 @@
-export function formatComment(comment) {
+export function formatComment(comment : any) {
     return {
       id: comment.id,
       user: comment.user?.login,
@@ -10,7 +10,7 @@ export function formatComment(comment) {
   }
 
   // Error handler
-export async function handleError(context, app, error) {
+export async function handleError(context: { octokit: { issues: { createComment: (arg0: any) => any; }; }; repo: () => any; payload: { pull_request: { number: any; }; }; }, app: { log: any; on?: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }, error: any) {
     app.log.error('PR processing error:');
     app.log.error(error.message);
     

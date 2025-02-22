@@ -15,13 +15,13 @@ import { handleError } from "./utils.js";
 // const {handlePrAnalysis} = require('./llm');
 // const {handleKeployWorkflowTrigger} = require('./keploy');
 
-export default (app) => {
-  app.log.info("Yay, the app was loaded!");
+export default (app: { log: { info: (arg0: string, arg1: string | undefined) => void; }; on: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }) => {
+  app.log.info("Yay, the app was loaded!", undefined);
 
-  const handlePrEvent = async (context) => {
+  const handlePrEvent = async (context : any) => {
     try {
-      const prData = await getAllPrDetails(context);
-      app.log.info(prData, "Full PR data collected");
+      const prData = await getAllPrDetails(context, app);
+      app.log.info(JSON.stringify(prData), "Full PR data collected");
       
       await handlePrAnalysis(context, prData);
       

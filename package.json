@@ -12,7 +12,7 @@
     "probot-app"
   ],
   "scripts": {
-    "start": "probot run ./dist/index.js",
+    "start": "probot run ./index.js",
     "test": "node --test dist/**/*.js",
     "build": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only ./index.ts"
