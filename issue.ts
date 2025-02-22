@@ -21,14 +21,25 @@ export async function getIssueDetails(context: any, app: any) {
                 created_at: issue.data.created_at,
                 updated_at: issue.data.updated_at,
                 labels: issue.data.labels.map((label: any) => label.name),
+                changed_files: 0, // Issues don't have changed files
             },
-            comments: await getIssueComments(
-                context,
-                app,
-                owner,
-                repo,
-                issueNumber,
-            ),
+            comments: {
+                issue_comments: await getIssueComments(
+                    context,
+                    app,
+                    owner,
+                    repo,
+                    issueNumber,
+                ),
+                review_comments: [] // Issues don't have review comments
+            },
+            files: [], // Issues don't have files
+            relationships: {
+                requested_reviewers: [],
+                assignees: issue.data.assignees,
+                labels: issue.data.labels
+            },
+            code_changes: {} // Issues don't have code changes
         };
     } catch (error) {
         app.log.error("Error fetching issue details:", error);
