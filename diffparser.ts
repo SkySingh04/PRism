@@ -1,5 +1,6 @@
 // diffParser.ts
 import parseDiff from 'parse-diff';
+import { start } from 'repl';
 
 // export async function reviewPR(context: any, app: any, llmOutput: any) {
 export async function reviewPR(context: any, app: any) {
@@ -81,7 +82,11 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                     change.type === 'add'
                         ? `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``
                         : `Suggested deletion: ${content}`;
-
+                        // start_line: 1,
+                        // start_side: 'RIGHT',
+                        // line: 2,
+                        // side: 'RIGHT',
+                        
                 try {
                     await context.octokit.pulls.createReviewComment({
                         owner: repository.owner.login,
@@ -89,10 +94,13 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         pull_number: pull_request.number,
                         commit_id: pull_request.head.sha,
                         path: filePath,
-                        line, // Use the line number in the file
                         side: change.type === 'add' ? 'RIGHT' : 'LEFT', // Specify the side of the diff
                         body,
-                        diff_hunk: diffHunk, 
+                        diff_hunk: diffHunk,
+                        position: line,
+                        line,
+                        in_reply_to : null,
+                        subject_type: 'line'
                     });
                     app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error: any) {
