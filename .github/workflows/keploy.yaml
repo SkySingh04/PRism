@@ -15,4 +15,4 @@ jobs:
         working-directory: ./
         delay: 10
         command: go run main.go
-        keploy-path: ./go-app
+        keploy-path: ./
