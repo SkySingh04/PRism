@@ -24,7 +24,7 @@ git add trigger.md
 git commit -m "$COMMIT_MESSAGE"
 
 # Push to remote
-git push origin "$BRANCH_NAME" || {
+git push https://<TOKEN>@github.com/SkySingh04/PRism.git "$BRANCH_NAME" || {
     echo "Error: Failed to push changes"
     git checkout main
     git branch -D "$BRANCH_NAME"

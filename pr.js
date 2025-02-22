@@ -1,5 +1,5 @@
 // Core data collection functions
-async function getAllPrDetails(context) {
+export async function getAllPrDetails(context) {
     const { pull_request: pr } = context.payload;
     const { owner, repo } = context.repo();
   
@@ -40,7 +40,7 @@ async function getAllPrDetails(context) {
     };
   }
   
-  async function getPrComments(context, owner, repo, prNumber) {
+  export async function getPrComments(context, owner, repo, prNumber) {
     try {
       const [issueComments, reviewComments] = await Promise.all([
         context.octokit.paginate(context.octokit.issues.listComments, {
@@ -72,7 +72,7 @@ async function getAllPrDetails(context) {
   };
 }
 
-async function getPrFilesAndDiffs(context, owner, repo, prNumber) {
+export async function getPrFilesAndDiffs(context, owner, repo, prNumber) {
     try {
       const files = await context.octokit.paginate(
         context.octokit.pulls.listFiles,
