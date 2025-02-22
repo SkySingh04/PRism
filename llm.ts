@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
+import { determineLabelFromAnalysis, addLabelToPR } from './src/addLabel.js';
 // import { createInlineCommentsFromDiff } from './diffparser.js';
 
 
@@ -85,12 +86,10 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   // call the LLM analysis function with selected model
   const llmOutput = await analyzeLLM(prData, rules.rules , API  , model, app);
 
-  // await prData.octokit.issues.createComment({
-  //   ...prData.repo(),
-  //   issue_number: prData.payload.pull_request.number,
-  //   body: `## LLM Analysis
-  //   ${llmOutput}`
-  // });
+  // Determine and add appropriate label
+  const labelToAdd = await determineLabelFromAnalysis(llmOutput);
+  await addLabelToPR(context, context.payload.pull_request.number, labelToAdd);
+
   return llmOutput;
 }
 
