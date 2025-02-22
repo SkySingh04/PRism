@@ -10,29 +10,29 @@ import { handlePrAnalysis } from "./llm.js";
 import { handleKeployWorkflowTrigger } from "./keploy.js";
 import { handleError } from "./utils.js";
 import { handleSecurityWorkflowTrigger } from "./security.js";
+import { handleIssueEvent } from "./issue.js";
 
+export default (app: {
+    log: { info: (arg0: string, arg1?: string) => void };
+    on: (arg0: string[], arg1: (context: any) => Promise<void>) => void;
+}) => {
+    app.log.info("Yay, the app was loaded!");
 
-export default (app: { log: { info: (arg0: string, arg1: string | undefined) => void; }; on: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }) => {
-  app.log.info("Yay, the app was loaded!", undefined);
+    const handlePrEvent = async (context: any) => {
+        try {
+            const prData = await getAllPrDetails(context, app);
+            app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-  const handlePrEvent = async (context : any) => {
-    try {
-      const prData = await getAllPrDetails(context, app);
-      app.log.info(JSON.stringify(prData), "Full PR data collected");
-      
-      await handlePrAnalysis(context, prData);
-      
-      await handleKeployWorkflowTrigger(context);
+            await handlePrAnalysis(context, prData);
+            await handleKeployWorkflowTrigger(context);
+            await handleSecurityWorkflowTrigger(context);
+        } catch (error) {
+            await handleError(context, app, error);
+        }
+    };
 
-      await handleSecurityWorkflowTrigger(context);
-    } catch (error) {
-      await handleError(context, app, error);
-    }
-  };
-  app.on(["pull_request.opened", "pull_request.synchronize"], handlePrEvent);
+    app.on(["pull_request.opened", "pull_request.synchronize"], handlePrEvent);
+    app.on(["issues.opened", "issues.edited"], async (context) => {
+        await handleIssueEvent(context, app);
+    });
 };
-
-
-
-
-
