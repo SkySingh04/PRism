@@ -65,12 +65,10 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
         const filePath = file.to || file.from;
 
         for (const chunk of file.chunks) {
-            const diffHunk = chunk.content; // The full chunk content is the diff hunk
-
             for (const change of chunk.changes) {
                 if (change.type !== 'add') continue; // Focus on additions for comments
 
-                const line = change.ln; // Use the added line number
+                const line = change.ln; // Line number in the new file
                 const content = change.content.slice(1).trim();
                 const body = `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``;
 
@@ -81,10 +79,13 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         pull_number: pull_request.number,
                         commit_id: pull_request.head.sha,
                         path: filePath,
-                        side: 'RIGHT', // Comments are on the 'RIGHT' side for additions
-                        line, // Line number for unified diff
-                        diff_hunk: diffHunk, // Full context of the hunk
+                        side: 'RIGHT', // Comments on the RIGHT side for additions
+                        line,
                         body,
+                        // Enable comfort-fade preview to use line and side parameters
+                        mediaType: {
+                            previews: ['comfort-fade']
+                        }
                     });
                     app.log.info(`Created comment on ${filePath} line ${line}`);
                 } catch (error: any) {
