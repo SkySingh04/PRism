@@ -8,13 +8,7 @@ export async function handlePrAnalysis(
     repo: () => any; 
     payload: { pull_request: { number: any; }; }; 
   }, 
-  prData: { 
-    metadata: any; 
-    comments?: { issue_comments: any; review_comments: any; error?: undefined; } | { error: string; issue_comments?: undefined; review_comments?: undefined; }; 
-    files?: any; 
-    relationships?: { requested_reviewers: any; assignees: any; labels: any; }; 
-    code_changes: any; 
-  }
+  prData: any
 ) {
   // Load current configuration
   const config = loadConfig();

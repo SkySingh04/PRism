@@ -1,0 +1,18 @@
+name: Run test-cases
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  my_job:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Keploy Report
+      uses: keploy/testgpt@main
+      with:
+        working-directory: /
+        delay: 10
+        command: go run main.go
+        keploy-path: ./
