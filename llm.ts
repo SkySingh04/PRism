@@ -3,8 +3,6 @@ import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
 // import { createInlineCommentsFromDiff } from './diffparser.js';
-import { handleError } from './utils.js';
-import { json } from 'stream/consumers';
 
 
 export async function handlePrAnalysis(
@@ -86,6 +84,13 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
 
   // call the LLM analysis function with selected model
   const llmOutput = await analyzeLLM(prData, rules.rules , API  , model, app);
+
+  // await prData.octokit.issues.createComment({
+  //   ...prData.repo(),
+  //   issue_number: prData.payload.pull_request.number,
+  //   body: `## LLM Analysis
+  //   ${llmOutput}`
+  // });
   return llmOutput;
 }
 
@@ -135,19 +140,15 @@ index abc1234..def5678 100644
   `
 
   // Call the API with the analysis context
-  const response = await axios.post(API, {
+  var response = await axios.post(API, {
     model: model,
     prompt
   });
 
-  app.log.info('API Response:', response.data);
-
-  await prData.octokit.issues.createComment({
-    ...prData.repo(),
-    issue_number: prData.payload.pull_request.number,
-    body: `## LLM Analysis
-    ${response.data}`
-  });
+  const stringResp = await JSON.stringify(response.data, null, 2);
+  app.log.info('API Response:',stringResp);
+  return stringResp;
+  
 }
 
 
