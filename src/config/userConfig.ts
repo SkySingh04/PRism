@@ -1,8 +1,14 @@
 import fs from 'fs';
 
+export interface ModelInfo {
+    name: string;
+    link: string;
+}
+
 export interface UserConfig {
-  useCase: string;
-  apiEndpoint: string;
+    useCase: string;
+    apiEndpoint: string;
+    selectedModel: string;  // Changed from ModelInfo to string
 }
 
 const CONFIG_FILE = 'prism-config.json';
