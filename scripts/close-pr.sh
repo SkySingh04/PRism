@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GITHUB_TOKEN="your_personal_access_token_here"
+GITHUB_TOKEN=""
 OWNER="SkySingh04"
 REPO="PRism"
 
