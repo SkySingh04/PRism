@@ -1,23 +1,99 @@
-name: Run test-cases
-on:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-  
-jobs:
-  run_test_cases:
-    runs-on: ubuntu-latest
+name: Keploy Test Runner
 
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
     steps:
-    - name: Keploy Report
-      uses: keploy/testgpt@main
-      with:
-        working-directory: ./
-        delay: 10
-        command: go run main.go
-        keploy-path: ./
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        if: contains(github.event.inputs.command, 'go')
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Setup Node.js
+        if: contains(github.event.inputs.command, 'node')
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java
+        if: contains(github.event.inputs.command, 'java') || contains(github.event.inputs.command, 'mvn')
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Python
+        if: contains(github.event.inputs.command, 'python')
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Keploy
+        run: |
+          curl --silent --location "https://github.com/keploy/keploy/releases/latest/download/keploy_linux_amd64.tar.gz" | tar xz -C /tmp
+          sudo mv /tmp/keploy /usr/local/bin/keploy
+          chmod +x /usr/local/bin/keploy
+
+      - name: Run Tests
+        id: keploy-test
+        run: |
+          cd ${{ inputs.working-directory }}
+          
+          # Install dependencies based on language
+          if [[ "${{ inputs.command }}" =~ .*"go".* ]]; then
+            go mod download
+            go build -o application
+            sudo -E keploy test -c "./application" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
+          elif [[ "${{ inputs.command }}" =~ .*"node".* ]]; then
+            npm install
+            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
+          elif [[ "${{ inputs.command }}" =~ .*"java".* ]] || [[ "${{ inputs.command }}" =~ .*"mvn".* ]]; then
+            mvn clean install
+            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
+          elif [[ "${{ inputs.command }}" =~ .*"python".* ]]; then
+            pip install -r requirements.txt
+            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
+          elif [[ "${{ inputs.command }}" =~ .*"docker compose".* ]] || [[ "${{ inputs.command }}" =~ .*"docker-compose".* ]]; then
+            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}" --containerName "${{ inputs.container-name }}" --buildDelay ${{ inputs.build-delay || '50s' }}
+          elif [[ "${{ inputs.command }}" =~ .*"docker".* ]]; then
+            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}" --buildDelay ${{ inputs.build-delay || '50s' }}
+          else
+            echo "Unsupported command type"
+            exit 1
+          fi
+          
+          # Generate report
+          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total tests: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_tests.out
+          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test passed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_passed.out
+          grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test failed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_failed.out
+          
+          echo 'KEPLOY_REPORT<<EOF' >> $GITHUB_OUTPUT
+          cat final_total_tests.out final_total_passed.out final_total_failed.out >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: success()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const report = process.env.KEPLOY_REPORT;
+            if (!report) {
+              console.error('Error: KEPLOY_REPORT not found.');
+              process.exit(1);
+            }
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+        env:
+          KEPLOY_REPORT: ${{ steps.keploy-test.outputs.KEPLOY_REPORT }}
