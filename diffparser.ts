@@ -90,6 +90,7 @@ export async function createInlineCommentsFromDiff(diff: string, context: any, a
                         side: 'RIGHT', // Comments on the RIGHT side for additions
                         line,
                         body,
+                        diff_hunk: change.content,
                         // Enable comfort-fade preview to use line and side parameters
                         mediaType: {
                             previews: ['comfort-fade']
