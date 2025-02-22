@@ -11,7 +11,8 @@ export async function getAllPrDetails(context) {
         requested_reviewers: pr.requested_reviewers?.map(u => u.login) || [],
         assignees: pr.assignees?.map(u => u.login) || [],
         labels: pr.labels?.map(l => l.name) || []
-      }
+      },
+      code_changes: extractCodeChangesForLLM(prData)
     };
   }
 
@@ -93,3 +94,61 @@ export async function getPrFilesAndDiffs(context, owner, repo, prNumber) {
     }
   }
 
+  export function extractCodeChangesForLLM(prData) {
+    const { files } = prData;
+    
+    // Skip non-code files
+    const codeFileExtensions = ['.js', '.py', '.java', '.cpp', '.ts', '.go', '.rs', '.php', '.rb'];
+    
+    const codeChanges = files
+      .filter(file => {
+        const ext = '.' + file.filename.split('.').pop().toLowerCase();
+        return codeFileExtensions.includes(ext);
+      })
+      .map(file => {
+        // Parse the patch to separate additions and deletions
+        const changes = parsePatch(file.patch);
+        
+        return {
+          file: file.filename,
+          type: file.status,
+          changes: {
+            removed: changes.removed.join('\n'),
+            added: changes.added.join('\n')
+          },
+          stats: {
+            additions: file.additions,
+            deletions: file.deletions
+          }
+        };
+      });
+  
+    return {
+      summary: {
+        files_changed: codeChanges.length,
+        total_additions: codeChanges.reduce((sum, file) => sum + file.stats.additions, 0),
+        total_deletions: codeChanges.reduce((sum, file) => sum + file.stats.deletions, 0)
+      },
+      changes: codeChanges
+    };
+  }
+  
+  function parsePatch(patch) {
+    if (!patch || patch === 'Diff too large to display') {
+      return { added: [], removed: [] };
+    }
+  
+    const lines = patch.split('\n');
+    const added = [];
+    const removed = [];
+  
+    lines.forEach(line => {
+      if (line.startsWith('+') && !line.startsWith('+++')) {
+        added.push(line.substring(1));
+      } else if (line.startsWith('-') && !line.startsWith('---')) {
+        removed.push(line.substring(1));
+      }
+    });
+  
+    return { added, removed };
+  }
