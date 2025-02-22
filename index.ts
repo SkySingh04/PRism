@@ -37,8 +37,8 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
-            app.log.info(JSON.stringify(llmOutput), "LLM analysis complete");
+            // const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
+            // app.log.info(JSON.stringify(llmOutput), "LLM analysis complete");
             // await reviewPR(context, app, llmOutput);
             await reviewPR(context, app);
             
