@@ -1,12 +1,12 @@
 // Core data collection functions
-export async function getAllPrDetails(context) {
+export async function getAllPrDetails(context , app) {
     const { pull_request: pr } = context.payload;
     const { owner, repo } = context.repo();
   
     return {
       metadata: getPrMetadata(pr),
-      comments: await getPrComments(context, owner, repo, pr.number),
-      files: await getPrFilesAndDiffs(context, owner, repo, pr.number),
+      comments: await getPrComments(context, app, owner, repo, pr.number),
+      files: await getPrFilesAndDiffs(context,app, owner, repo, pr.number),
       relationships: {
         requested_reviewers: pr.requested_reviewers?.map(u => u.login) || [],
         assignees: pr.assignees?.map(u => u.login) || [],
@@ -41,7 +41,7 @@ export async function getAllPrDetails(context) {
     };
   }
   
-  export async function getPrComments(context, owner, repo, prNumber) {
+  export async function getPrComments(context, app, owner, repo, prNumber) {
     try {
       const [issueComments, reviewComments] = await Promise.all([
         context.octokit.paginate(context.octokit.issues.listComments, {
@@ -57,7 +57,7 @@ export async function getAllPrDetails(context) {
         review_comments: reviewComments.map(formatComment)
       };
     } catch (error) {
-      context.app.log.error('Error fetching comments:', error);
+      app.log.error('Error fetching comments:', error);
       return { error: 'Failed to fetch comments' };
     }
   }
@@ -73,7 +73,7 @@ export async function getAllPrDetails(context) {
   };
 }
 
-export async function getPrFilesAndDiffs(context, owner, repo, prNumber) {
+export async function getPrFilesAndDiffs(context, app, owner, repo, prNumber) {
     try {
       const files = await context.octokit.paginate(
         context.octokit.pulls.listFiles,
@@ -89,7 +89,7 @@ export async function getPrFilesAndDiffs(context, owner, repo, prNumber) {
         patch: file.patch || 'Diff too large to display'
       }));
     } catch (error) {
-      context.app.log.error('Error fetching files:', error);
+      app.log.error('Error fetching files:', error);
       return { error: 'Failed to fetch files' };
     }
   }
