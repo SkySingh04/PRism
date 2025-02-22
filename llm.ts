@@ -140,7 +140,7 @@ index abc1234..def5678 100644
     prompt
   });
 
-  app.context.info('API Response:', response.data);
+  app.log.info('API Response:', response.data);
 
   await prData.octokit.issues.createComment({
     ...prData.repo(),
