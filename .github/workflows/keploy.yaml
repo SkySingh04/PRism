@@ -3,6 +3,29 @@ name: Keploy Test Runner
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Command to run the application'
+        required: true
+      working-directory:
+        description: 'Working directory'
+        required: true
+        default: '.'
+      delay:
+        description: 'Startup delay'
+        required: true
+        default: '10'
+      keploy-path:
+        description: 'Path to keploy'
+        required: true
+        default: './'
+      container-name:
+        description: 'Container name for docker compose'
+        required: false
+      build-delay:
+        description: 'Docker build delay'
+        default: '50s'
 
 jobs:
   test:
@@ -11,26 +34,26 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Go
-        if: contains(github.event.inputs.command, 'go')
+        if: contains(inputs.command, 'go')
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
 
       - name: Setup Node.js
-        if: contains(github.event.inputs.command, 'node')
+        if: contains(inputs.command, 'node')
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Setup Java
-        if: contains(github.event.inputs.command, 'java') || contains(github.event.inputs.command, 'mvn')
+        if: contains(inputs.command, 'java') || contains(inputs.command, 'mvn')
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Python
-        if: contains(github.event.inputs.command, 'python')
+        if: contains(inputs.command, 'python')
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
@@ -43,33 +66,38 @@ jobs:
 
       - name: Run Tests
         id: keploy-test
+        env:
+          COMMAND: ${{ github.event.inputs.command }}
+          WORKING_DIR: ${{ github.event.inputs.working-directory }}
+          DELAY: ${{ github.event.inputs.delay }}
+          KEPLOY_PATH: ${{ github.event.inputs.keploy-path }}
+          CONTAINER_NAME: ${{ github.event.inputs.container-name }}
+          BUILD_DELAY: ${{ github.event.inputs.build-delay }}
         run: |
-          cd ${{ inputs.working-directory }}
+          cd "$WORKING_DIR"
           
-          # Install dependencies based on language
-          if [[ "${{ inputs.command }}" =~ .*"go".* ]]; then
+          if [[ "$COMMAND" =~ .*"go".* ]]; then
             go mod download
             go build -o application
-            sudo -E keploy test -c "./application" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
-          elif [[ "${{ inputs.command }}" =~ .*"node".* ]]; then
+            sudo -E keploy test -c "./application" --delay "$DELAY" --path "$KEPLOY_PATH"
+          elif [[ "$COMMAND" =~ .*"node".* ]]; then
             npm install
-            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
-          elif [[ "${{ inputs.command }}" =~ .*"java".* ]] || [[ "${{ inputs.command }}" =~ .*"mvn".* ]]; then
+            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH"
+          elif [[ "$COMMAND" =~ .*"java".* ]] || [[ "$COMMAND" =~ .*"mvn".* ]]; then
             mvn clean install
-            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
-          elif [[ "${{ inputs.command }}" =~ .*"python".* ]]; then
+            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH"
+          elif [[ "$COMMAND" =~ .*"python".* ]]; then
             pip install -r requirements.txt
-            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}"
-          elif [[ "${{ inputs.command }}" =~ .*"docker compose".* ]] || [[ "${{ inputs.command }}" =~ .*"docker-compose".* ]]; then
-            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}" --containerName "${{ inputs.container-name }}" --buildDelay ${{ inputs.build-delay || '50s' }}
-          elif [[ "${{ inputs.command }}" =~ .*"docker".* ]]; then
-            sudo -E keploy test -c "${{ inputs.command }}" --delay ${{ inputs.delay }} --path "${{ inputs.keploy-path }}" --buildDelay ${{ inputs.build-delay || '50s' }}
+            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH"
+          elif [[ "$COMMAND" =~ .*"docker compose".* ]] || [[ "$COMMAND" =~ .*"docker-compose".* ]]; then
+            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH" --containerName "$CONTAINER_NAME" --buildDelay "${BUILD_DELAY:-50s}"
+          elif [[ "$COMMAND" =~ .*"docker".* ]]; then
+            sudo -E keploy test -c "$COMMAND" --delay "$DELAY" --path "$KEPLOY_PATH" --buildDelay "${BUILD_DELAY:-50s}"
           else
-            echo "Unsupported command type"
+            echo "Error: Unsupported command type - $COMMAND"
             exit 1
           fi
           
-          # Generate report
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total tests: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_tests.out
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test passed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_passed.out
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test failed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_failed.out
@@ -78,22 +106,20 @@ jobs:
           cat final_total_tests.out final_total_passed.out final_total_failed.out >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
-      - name: Comment on PR
+      - name: Comment PR
         if: success()
         uses: actions/github-script@v6
+        env:
+          KEPLOY_REPORT: ${{ steps.keploy-test.outputs.KEPLOY_REPORT }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const report = process.env.KEPLOY_REPORT;
-            if (!report) {
-              console.error('Error: KEPLOY_REPORT not found.');
-              process.exit(1);
+            if (!process.env.KEPLOY_REPORT) {
+              throw new Error('KEPLOY_REPORT not found');
             }
             await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: report
+              body: process.env.KEPLOY_REPORT
             });
-        env:
-          KEPLOY_REPORT: ${{ steps.keploy-test.outputs.KEPLOY_REPORT }}
