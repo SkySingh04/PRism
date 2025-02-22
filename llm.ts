@@ -124,8 +124,10 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   Suggest the changes in the format of how git diff shows the changes.
 
   I must be able to parse the data and show it as github reviews.
+  
 
   You must follow the following pattern, in the format of a git diff: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
+  This is just a sample, do not copy and paste this. Only suggest a change when you're 95% sure it's correct.
   
   Suggested change:
   diff --git a/src/index.js b/src/index.js
