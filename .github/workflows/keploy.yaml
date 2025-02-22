@@ -5,7 +5,7 @@ on:
       - main
 
 jobs:
-  my_job:
+  run_test_cases:
     runs-on: ubuntu-latest
 
     steps:
