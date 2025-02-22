@@ -81,7 +81,7 @@ export async function getPrFilesAndDiffs(context: any, app: any, owner: string, 
       }));
   } catch (error) {
       app.log.error('Error fetching files:', error);
-      return []; // Return empty array to avoid type errors downstream
+      return []; 
   }
 }
 

@@ -8,7 +8,7 @@ export async function handlePrAnalysis(context: { octokit: { issues: { createCom
   Author: ${prData.metadata.author}
   Files Changed: ${prData.metadata.changed_files}
   Status: ${prData.metadata.state}
-  Code Changes Summary: ${prData.code_changes}
+  Code Changes Summary: ${JSON.stringify(prData.code_changes)}
   
   Summary: ${prData.metadata.body?.substring(0, 100)}...`;
   

@@ -11,10 +11,6 @@ import { handleKeployWorkflowTrigger } from "./keploy.js";
 import { handleError } from "./utils.js";
 import { handleSecurityWorkflowTrigger } from "./security.js";
 
-// const {handleError } = require('./utils');
-// const {getAllPrDetails} = require('./pr');
-// const {handlePrAnalysis} = require('./llm');
-// const {handleKeployWorkflowTrigger} = require('./keploy');
 
 export default (app: { log: { info: (arg0: string, arg1: string | undefined) => void; }; on: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }) => {
   app.log.info("Yay, the app was loaded!", undefined);
