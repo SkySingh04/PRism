@@ -95,9 +95,10 @@ export async function getPrFilesAndDiffs(context, owner, repo, prNumber) {
   }
 
   export function extractCodeChangesForLLM(prData) {
+    app.log.info( "Full PR data collected");
+    app.log.info(prData);
     const { files } = prData;
-    console.log(prData)
-    console.log(files);
+    
     
     // Skip non-code files
     const codeFileExtensions = ['.js', '.py', '.java', '.cpp', '.ts', '.go', '.rs', '.php', '.rb'];

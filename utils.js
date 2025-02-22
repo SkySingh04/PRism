@@ -11,7 +11,8 @@ export function formatComment(comment) {
 
   // Error handler
 export async function handleError(context, app, error) {
-    app.log.error('PR processing error:', error);
+    app.log.error('PR processing error:');
+    app.log.error(error.message);
     
     await context.octokit.issues.createComment({
       ...context.repo(),
