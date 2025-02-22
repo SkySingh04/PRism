@@ -35,8 +35,8 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            await handlePrAnalysis(context, prData , config.apiEndpoint);
-            await handleKeployWorkflowTrigger(context);  
+            await handlePrAnalysis(context, prData , config.apiEndpoint, config.model);
+            await handleKeployWorkflowTrigger(context);
             await handleSecurityWorkflowTrigger(context);
         } catch (error) {
             await handleError(context, app, error);
