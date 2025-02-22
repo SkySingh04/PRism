@@ -23,7 +23,7 @@ export default async (app: {
         // Get user configuration through CLI
         config = await promptUserConfig();
         // selectedModel = config.model;
-        app.log.info(`Initialized with API url: ${config.apiEndpoint} for use case: ${config.useCase}`);
+        app.log.info(`Initialized with API url: ${config.apiEndpoint} for use case: ${config.useCase} and model : ${config.selectedModel}`);
     } catch (error) {
         app.log.info("Failed to get user configuration");
         process.exit(1);
@@ -36,13 +36,13 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            // const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.model , app);
-            // app.log.info(JSON.stringify(llmOutput), "LLM analysis complete");
+            const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
+            app.log.info(JSON.stringify(llmOutput), "LLM analysis complete");
             // await reviewPR(context, app, llmOutput);
             await reviewPR(context, app);
             
-            // await handleKeployWorkflowTrigger(context);  
-            // await handleSecurityWorkflowTrigger(context);
+            await handleKeployWorkflowTrigger(context);  
+            await handleSecurityWorkflowTrigger(context);
             
         } catch (error) {
             await handleError(context, app, error);
