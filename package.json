@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
+    "eslint": "^9.21.0",
     "nock": "^14.0.0- .5",
     "smee-client": "^2.0.0",
     "ts-node": "^10.9.2",
