@@ -96,8 +96,13 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
 
 ;
 export async function analyzeLLM(prData: any, rules: any, API: string, model: string , app : any) {
-  // Include issue context in LLM analysis
   const analysisContext = {
+    repository: {
+      name: prData.repository.name,
+      owner: prData.repository.owner,
+      readme: prData.repository.readme,
+      structure: prData.repository.structure
+    },
     pr: prData,
     rules: rules,
     issue_context: prData.linked_issue ? {
@@ -112,32 +117,44 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   };
 
   const stringanalysisContext = JSON.stringify(analysisContext, null, 2);
+  
+  const prompt = `
+  Repository Context:
+  Name: ${prData.repository.name}
+  Owner: ${prData.repository.owner}
+  
+  Project Structure:
+  ${prData.repository.structure}
+  
+  README Content:
+  ${prData.repository.readme}
+  
+  PR Context:
+  ${stringanalysisContext}
+
+  Given the above repository context and PR changes, please analyze the changes and:
+  1. Verify if the changes align with the project's structure and purpose as described in the README
+  2. Check if the changes follow the project's conventions visible in the folder structure
+  3. Suggest improvements or identify potential issues
+
+  Suggest the changes in the format of git diff.
+  
+  You must follow the following pattern for suggestions:
+  
+  Suggested change:
+  diff --git a/path/to/file b/path/to/file
+  index abc1234..def5678 100644
+  --- a/path/to/file
+  +++ b/path/to/file
+  @@ -line,count +line,count @@
+  actual diff content
+  `;
+
   app.log.info('Analysis Context:', stringanalysisContext);
   app.log.info(`Using Hugging Face API: ${API}`);
   app.log.info(`Using LLM model: ${model}`);
   app.log.info('Rules:', rules);
   app.log.info('PR Data:', prData);
-
-  const prompt = `
-  Here is some context about the PR made: ${stringanalysisContext}.
-
-  Suggest the changes in the format of how git diff shows the changes.
-
-  I must be able to parse the data and show it as github reviews.
-
-  You must follow the following pattern: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
-  
-  Suggested change:
-  diff --git a/src/index.js b/src/index.js
-index abc1234..def5678 100644
---- a/src/index.js
-+++ b/src/index.js
-@@ -1,5 +1,5 @@
- function add(a, b) {
--    return a - b; // Bug: Subtraction instead of addition
-+    return a + b; // Fixed: Now correctly adds
- }
-  `
 
   // Call the API with the analysis context
   var response = await axios.post(API, {
