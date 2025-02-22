@@ -50,54 +50,39 @@ index 1234567..890abcd 100644
     // });
 }
 
-export async function createInlineCommentsFromDiff(diff: string, context: any , app : any) {
+export async function createInlineCommentsFromDiff(diff: string, context: any, app: any) {
     const parsedFiles = parseDiff(diff);
-
     const { pull_request, repository } = context.payload;
-    const pullNumber = pull_request.number;
-    const commitId = pull_request.head.sha;
-    const owner = repository.owner.login;
-    const repo = repository.name;
 
     for (const file of parsedFiles) {
         for (const chunk of file.chunks) {
             for (const change of chunk.changes) {
-                if (change.type !== 'add' && change.type !== 'del') {
+                if (change.type !== 'add' && change.type !== 'del') continue;
+                
+                if (file.to === '/dev/null') {
+                    app.log.info(`Skipping deleted file: ${file.from}`);
                     continue;
                 }
 
-                // Determine line number and file path
-                const side = change.type === 'add' ? 'RIGHT' : 'LEFT';
-                const line = change.type === 'add' ? change.ln! : change.ln!;
                 const filePath = change.type === 'add' ? file.to! : file.from!;
-
-                // Skip deleted files
-                if (filePath === '/dev/null') {
-                    app.log.info(`Skipping comment for deleted file: ${file.from}`);
-                    continue;
-                }
-
-                // Prepare comment content
                 const content = change.content.slice(1).trim();
-                const body =
-                    change.type === 'add'
-                        ? `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``
-                        : `Suggested deletion: ${content}`;
+                const body = change.type === 'add'
+                    ? `Suggested change:\n\`\`\`suggestion\n${content}\n\`\`\``
+                    : `Suggested deletion: ${content}`;
 
                 try {
                     await context.octokit.pulls.createReviewComment({
-                        owner,
-                        repo,
-                        pull_number: pullNumber,
-                        commit_id: commitId,
+                        owner: repository.owner.login,
+                        repo: repository.name,
+                        pull_number: pull_request.number,
+                        commit_id: pull_request.head.sha,
                         path: filePath,
-                        line,
-                        side,
+                        position: change.ln,
                         body,
-                        diff_hunk: chunk.content 
+                        subject_type: 'file'
                     });
-                    app.log.info(`Created comment on ${filePath} line ${line}`);
-                } catch (error : any) {
+                    app.log.info(`Created comment on ${filePath} line ${change.ln}`);
+                } catch (error: any) {
                     app.log.error(`Failed to create comment: ${error.message}`);
                 }
             }
