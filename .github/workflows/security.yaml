@@ -1,7 +1,7 @@
 name: Security Scan with Trivy
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
 permissions:
   contents: read
