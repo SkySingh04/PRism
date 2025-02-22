@@ -1,0 +1,127 @@
+name: Lint Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up environment variables
+        run: echo "WORKDIR=${{ github.workspace }}/${{ inputs.working-directory }}" >> $GITHUB_ENV
+
+      - name: Detect languages
+        id: language-detection
+        shell: bash
+        run: |
+          declare -A extensions=(
+          ["go"]="go"
+          ["js"]="javascript"
+          ["ts"]="javascript" 
+          ["py"]="python"
+          ["java"]="java"
+          )
+
+          LANGUAGES=""
+
+          # Find all files in the repository and extract unique file extensions
+          for file in $(find . -type f); do
+            echo $file
+            ext="${file##*.}"
+            if [[ -n "${extensions[$ext]}" ]]; then
+              LANGUAGES+="${extensions[$ext]} "
+            fi
+          done
+
+          # Get unique languages
+          UNIQUE_LANGS=$(echo "$LANGUAGES" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          echo "languages=$UNIQUE_LANGS" >> $GITHUB_ENV
+
+      - name: Install analysis tools
+        shell: bash
+        run: |
+          for lang in ${{ env.languages }}; do
+            case "$lang" in
+              go)
+                go install golang.org/x/lint/golint@latest
+                ;;
+              javascript)
+                npm install -g eslint
+                ;;
+              python)
+                pip install flake8
+                ;;
+            esac
+          done
+
+      - name: Run Code Analysis
+        shell: bash
+        run: |
+          mkdir -p analysis-reports
+          cd $WORKDIR
+          
+          for lang in ${{ env.languages }}; do
+            echo $lang
+            case "$lang" in
+              go)
+                golangci-lint run --out-format=github-actions ./... > analysis-reports/go-lint.txt || true
+                ;;
+              javascript)
+                eslint . --format junit -o analysis-reports/js-lint.xml || true
+                ;;
+              python)
+                which flake8 || pip install flake8
+                
+                flake8 . --output-file=analysis-reports/py-lint.txt || true
+                ;;
+            esac
+          done
+
+      - name: Combine Analysis Reports
+        shell: bash
+        run: |
+          mkdir -p analysis-reports
+          temp_file=$(mktemp) # Temporary file to avoid 'input file is output file' issue
+
+          for report in analysis-reports/*; do
+            if [ -f "$report" ]; then
+              echo "### $(basename "$report")" >> "$temp_file"
+              cat "$report" >> "$temp_file"
+              echo -e "\n---\n" >> "$temp_file"
+            fi
+          done
+
+          mv "$temp_file" analysis-reports/final-report.txt
+
+      - name: Upload Final Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestGPT-Analysis-Report
+          path: analysis-reports/final-report.txt
+          if-no-files-found: warn
+
+      - name: Read Full Lint Report
+        id: read_report
+        run: |
+          {
+            echo "REPORT<<EOF"
+            cat analysis-reports/final-report.txt
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Comment Full Lint Report on PR
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## 🔍 Lint Scan Results
+            ```
+            ${{ env.REPORT }}
+            ```
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  
