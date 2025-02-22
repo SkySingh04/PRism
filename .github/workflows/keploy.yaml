@@ -5,14 +5,14 @@ on:
       - main
 
 jobs:
-  my_job:
+  run_test_cases:
     runs-on: ubuntu-latest
 
     steps:
     - name: Keploy Report
       uses: keploy/testgpt@main
       with:
-        working-directory: /
+        working-directory: ./
         delay: 10
         command: go run main.go
         keploy-path: ./
