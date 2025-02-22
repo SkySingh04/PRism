@@ -12,7 +12,7 @@ jobs:
     - name: Keploy Report
       uses: keploy/testgpt@main
       with:
-        working-directory: /
+        working-directory: ./go-app
         delay: 10
         command: go run main.go
-        keploy-path: ./go-app
+        keploy-path: ./
