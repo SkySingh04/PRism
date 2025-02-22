@@ -11,7 +11,7 @@ export async function handleKeployWorkflowTrigger(context: { repo: () => { owner
         await context.octokit.issues.createComment({
           ...context.repo(),
           issue_number: context.payload.pull_request.number,
-          body: '⚠️ Missing /keploy folder'
+          body: '⚠️ Failed to run Keploy Tests'
         });
         return;
       }
