@@ -12,6 +12,7 @@ import { handleError } from "./utils.js";
 import { handleSecurityWorkflowTrigger } from "./security.js";
 import { promptUserConfig } from './src/cli.js';
 import { reviewPR } from './diffparser.js';
+import { handleLintWorkflowTrigger } from "./lint.js";
 
 let config: any;
 
@@ -43,7 +44,7 @@ export default async (app: {
             
             await handleKeployWorkflowTrigger(context);  
             await handleSecurityWorkflowTrigger(context);
-            
+            await handleLintWorkflowTrigger(context);    
         } catch (error) {
             await handleError(context, app, error);
         }
