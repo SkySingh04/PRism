@@ -1,4 +1,4 @@
-async function handlePrAnalysis(context, prData) {
+export async function handlePrAnalysis(context, prData) {
     // Ye karna h bhai
     const analysis = `PR Analysis:
   Title: ${prData.metadata.title}

@@ -1,4 +1,4 @@
-function formatComment(comment) {
+export function formatComment(comment) {
     return {
       id: comment.id,
       user: comment.user?.login,
@@ -10,7 +10,7 @@ function formatComment(comment) {
   }
 
   // Error handler
-async function handleError(context, error) {
+export async function handleError(context, error) {
     context.app.log.error('PR processing error:', error);
     
     await context.octokit.issues.createComment({
