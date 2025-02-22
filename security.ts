@@ -1,6 +1,6 @@
 export async function handleSecurityWorkflowTrigger(context: any) {
     const { owner, repo } = context.repo();
-    const { base } = context.payload.pull_request;
+    // const { base } = context.payload.pull_request;
   
     try {
       await context.octokit.issues.createComment({
@@ -10,7 +10,7 @@ export async function handleSecurityWorkflowTrigger(context: any) {
       });
       
       await context.octokit.actions.createWorkflowDispatch({
-        owner, repo, workflow_id: 'security.yaml', ref : base.ref
+        owner, repo, workflow_id: 'security.yaml', ref : "main"
       });
     } catch (error : any) {
       if (error.status === 404) {
