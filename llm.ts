@@ -123,6 +123,9 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
 
   Suggest the changes in the format of how git diff shows the changes.
 
+  Please check the codebase diff for the following rules:
+  ${rules}
+
   I must be able to parse the data and show it as github reviews.
   
 
