@@ -1,5 +1,7 @@
 import { handlePrAnalysis } from "./llm.js";
 import { handleError } from "./utils.js";
+import { loadConfig } from './src/config/userConfig.js';
+import { useCaseModels } from './src/config/models.js';
 
 export async function getIssueDetails(context: any, app: any) {
     try {
@@ -82,8 +84,24 @@ export async function handleIssueEvent(context: any, app: any) {
         const issueData = await getIssueDetails(context, app);
         if (!issueData) return;
 
-        // Get selectedModel from global scope
-        const { selectedModel } = global as any;
+        // Load and display config
+        const config = loadConfig();
+        const useCase = config ? useCaseModels[config.useCase] : null;
+
+        const configInfo = `## PRism Configuration
+Use Case: ${config?.useCase || 'Not configured'}
+API Endpoint: ${config?.apiEndpoint || 'Not configured'}
+
+### Suggested Models for ${useCase?.name || 'current use case'}:
+${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('\n') || 'No models configured'}
+`;
+
+        await context.octokit.issues.createComment({
+            ...context.repo(),
+            issue_number: context.payload.issue.number,
+            body: configInfo,
+        });
+
         await handlePrAnalysis(context, issueData);
     } catch (error) {
         await handleError(context, app, error);
