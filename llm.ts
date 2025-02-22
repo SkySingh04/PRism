@@ -118,7 +118,20 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
 
   Suggest the changes in the format of how git diff shows the changes.
 
-  I must be able to parse the data and show it to the user.
+  I must be able to parse the data and show it as github reviews.
+
+  You must follow the following pattern: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
+  
+  Suggested change:
+  diff --git a/src/index.js b/src/index.js
+index abc1234..def5678 100644
+--- a/src/index.js
++++ b/src/index.js
+@@ -1,5 +1,5 @@
+ function add(a, b) {
+-    return a - b; // Bug: Subtraction instead of addition
++    return a + b; // Fixed: Now correctly adds
+ }
   `
 
   // Call the API with the analysis context
