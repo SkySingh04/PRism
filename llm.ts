@@ -133,5 +133,5 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
     ${response.data}`
   });
 }
-}
+
 
