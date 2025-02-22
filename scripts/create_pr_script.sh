@@ -7,11 +7,11 @@ COMMIT_MESSAGE="Update trigger.md with timestamp"
 PR_TITLE="Automated PR: Update trigger.md"
 PR_BODY="Automated PR to update trigger.md with current timestamp"
 
-# Ensure we're in a git repository
-if [ ! -d ".git" ]; then
-    echo "Error: Not a git repository"
-    exit 1
-fi
+# # Ensure we're in a git repository
+# if [ ! -d ".git" ]; then
+#     echo "Error: Not a git repository"
+#     exit 1
+# fi
 
 # Create new branch
 git checkout -b "$BRANCH_NAME" || exit 1
