@@ -82,7 +82,9 @@ export async function handleIssueEvent(context: any, app: any) {
         const issueData = await getIssueDetails(context, app);
         if (!issueData) return;
 
-        await handlePrAnalysis(context, issueData);
+        // Get selectedModel from global scope
+        const { selectedModel } = global as any;
+        await handlePrAnalysis(context, issueData, selectedModel);
     } catch (error) {
         await handleError(context, app, error);
     }

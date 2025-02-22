@@ -12,13 +12,14 @@ export async function handlePrAnalysis(
     files?: any; 
     relationships?: { requested_reviewers: any; assignees: any; labels: any; }; 
     code_changes: any; 
-  }
+  },
+  selectedModel: string
 ) {
   // Convert the code changes to a JSON string
   const code_changes = JSON.stringify(prData.code_changes, null, 2); // Adding indentation for better readability
 
   // Build the analysis comment
-  const analysis = `PR Analysis:
+  const analysis = `PR Analysis using ${selectedModel}:
   Title: ${prData.metadata.title}
   Author: ${prData.metadata.author}
   Files Changed: ${prData.metadata.changed_files}
@@ -45,12 +46,13 @@ export async function handlePrAnalysis(
     body: rules.success ? rules.rules : rules.error,
   });
 
-  // call the LLM analysis function
-  await analyzeLLM(prData, rules.rules);
+  // call the LLM analysis function with selected model
+  await analyzeLLM(prData, rules.rules, selectedModel);
 }
 
 
-export async function analyzeLLM(prData: any, rules: any) {
+export async function analyzeLLM(prData: any, rules: any, model: string) {
+  console.log(`Using Hugging Face model: ${model}`);
   // Analyze the PR data against the rules
   // For now, we are just logging the rules and the PR data
   console.log('Rules:', rules);
