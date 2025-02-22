@@ -11,6 +11,7 @@ import { handleKeployWorkflowTrigger } from "./keploy.js";
 import { handleError } from "./utils.js";
 import { handleSecurityWorkflowTrigger } from "./security.js";
 import { promptUserConfig } from './src/cli.js';
+import { reviewPR } from './diffparser.js';
 
 let config: any;
 
@@ -35,9 +36,12 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            await handlePrAnalysis(context, prData , config.apiEndpoint);
-            await handleKeployWorkflowTrigger(context);  
-            await handleSecurityWorkflowTrigger(context);
+            const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint);
+            app.log.info(JSON.stringify(llmOutput), "LLM analysis complete");
+            await reviewPR(context, app, llmOutput);
+            // await handleKeployWorkflowTrigger(context);  
+            // await handleSecurityWorkflowTrigger(context);
+            
         } catch (error) {
             await handleError(context, app, error);
         }

@@ -1,6 +1,9 @@
 import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
+// import { createInlineCommentsFromDiff } from './diffparser.js';
+import { handleError } from './utils.js';
+
 
 export async function handlePrAnalysis(
   context: { 
@@ -80,7 +83,8 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   });
 
   // call the LLM analysis function with selected model
-  await analyzeLLM(prData, rules.rules , API);
+  const llmOutput = await analyzeLLM(prData, rules.rules , API );
+  return llmOutput;
 }
 
 
@@ -99,10 +103,12 @@ export async function analyzeLLM(prData: any, rules: any, API: string) {
       issue_discussion: prData.linked_issue.comments
     } : null
   };
-  console.log('Analysis Context:', analysisContext);
-  console.log(`Using Hugging Face API: ${API}`);
-  // Analyze the PR data against the rules
-  // For now, we are just logging the rules and the PR data
-  console.log('Rules:', rules);
-  console.log('PR Data:', prData);
+  try {
+    // Assume getLLMResponse fetches the git diff from your LLM
+    // const llmOutput = await getLLMResponse(analysisContext, apiEndpoint);
+    // return llmOutput;
+} catch (error : any) {
+    throw new Error(`Failed to analyze LLM: ${error.message}`);
 }
+}
+
