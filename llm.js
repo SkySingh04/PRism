@@ -1,10 +1,14 @@
 export async function handlePrAnalysis(context, prData) {
-    // Ye karna h bhai
+    // CALL THE LLM HERE AND PASS THE
+    // PR DATA TO IT
+
+    //Just adding as a comment for now for debugging
     const analysis = `PR Analysis:
   Title: ${prData.metadata.title}
   Author: ${prData.metadata.author}
   Files Changed: ${prData.metadata.changed_files}
   Status: ${prData.metadata.state}
+  Code Changes Summary: ${prData.code_changes}
   
   Summary: ${prData.metadata.body?.substring(0, 100)}...`;
   
