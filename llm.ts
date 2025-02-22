@@ -12,8 +12,7 @@ export async function handlePrAnalysis(
     files?: any; 
     relationships?: { requested_reviewers: any; assignees: any; labels: any; }; 
     code_changes: any; 
-  },
-  selectedModel: string
+  }
 ) {
   // Convert the code changes to a JSON string
   const code_changes = JSON.stringify(prData.code_changes, null, 2); // Adding indentation for better readability

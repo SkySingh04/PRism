@@ -17,8 +17,8 @@
     "dev": "ts-node-dev --respawn --transpile-only ./index.ts"
   },
   "dependencies": {
-    "axios": "^1.7.9",
-    "inquirer": "^8.2.4",
+    "chalk": "^5.4.1",
+    "inquirer": "^12.4.2",
     "probot": "^13.0.1"
   },
   "devDependencies": {
@@ -27,8 +27,7 @@
     "smee-client": "^2.0.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.7.3",
-    "@types/inquirer": "^8.2.4"
+    "typescript": "^5.7.3"
   },
   "engines": {
     "node": ">= 18"

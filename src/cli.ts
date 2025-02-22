@@ -1,26 +1,66 @@
 import inquirer from 'inquirer';
-import { useCaseModels, ModelConfig } from './config/models.js';
+import { useCaseModels } from './config/models.js';
+import { loadConfig, saveConfig, UserConfig } from './config/userConfig.js';
+import chalk from 'chalk';  // This will be fixed by package.json update
 
-export async function promptUserConfig() {
+export async function promptUserConfig(): Promise<UserConfig> {
+    // Check for existing config
+    const existingConfig = loadConfig();
+    if (existingConfig) {
+        console.log(chalk.cyan('Using existing configuration:'));
+        console.log(`Use Case: ${existingConfig.useCase}`);
+        console.log(`API Endpoint: ${existingConfig.apiEndpoint}`);
+        return existingConfig;
+    }
+
+    // Get use case
     const { useCase } = await inquirer.prompt([{
         type: 'list',
         name: 'useCase',
         message: 'Select your repository use case:',
-        choices: Object.keys(useCaseModels)
-    }]);
-
-    const { selectedModel } = await inquirer.prompt([{
-        type: 'list',
-        name: 'selectedModel',
-        message: 'Select a Hugging Face model for your use case:',
-        choices: useCaseModels[useCase].map((model: ModelConfig) => ({
-            name: `${model.name} - ${model.description}`,
-            value: model.huggingFaceModel
+        choices: Object.entries(useCaseModels).map(([key, value]) => ({
+            name: `${value.name} - ${value.description}`,
+            value: key
         }))
     }]);
 
-    return {
+    // Display suggested models with links
+    const selectedUseCase = useCaseModels[useCase];
+    console.log(chalk.green('\nRecommended Open Source Models for your use case:'));
+    selectedUseCase.suggestedModels.forEach(model => {
+        console.log(chalk.yellow(`• ${model.name} `) + chalk.blue(`[${model.link}]`));
+    });
+    console.log(chalk.gray('\nNote: These are suggestions based on your use case.\n'));
+
+    // After displaying suggested models, ask for model selection
+    // const { selectedModel } = await inquirer.prompt([{
+    //     type: 'list',
+    //     name: 'selectedModel',
+    //     message: 'Select a model to use:',
+    //     choices: selectedUseCase.suggestedModels
+    // }]);
+
+    // Get API endpoint
+    const { apiEndpoint } = await inquirer.prompt([{
+        type: 'input',
+        name: 'apiEndpoint',
+        message: 'Please enter the API link:',
+        default: 'http://localhost:11434/api/generate',
+        validate: (input: string) => {
+            return input.startsWith('http://') || input.startsWith('https://')
+                ? true
+                : 'Please enter a valid HTTP/HTTPS URL';
+        }
+    }]);
+
+    const config: UserConfig = {
         useCase,
-        model: selectedModel
+        apiEndpoint
     };
+
+    // Save configuration
+    saveConfig(config);
+    console.log(chalk.green('Configuration saved successfully!'));
+
+    return config;
 }

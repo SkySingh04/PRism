@@ -22,8 +22,8 @@ export default async (app: {
     try {
         // Get user configuration through CLI
         const config = await promptUserConfig();
-        selectedModel = config.model;
-        app.log.info(`Initialized with model: ${config.model} for use case: ${config.useCase}`);
+        // selectedModel = config.model;
+        app.log.info(`Initialized with API url: ${config.apiEndpoint} for use case: ${config.useCase}`);
     } catch (error) {
         app.log.info("Failed to get user configuration");
         process.exit(1);
@@ -36,7 +36,7 @@ export default async (app: {
             const prData = await getAllPrDetails(context, app);
             app.log.info(JSON.stringify(prData), "Full PR data collected");
 
-            await handlePrAnalysis(context, prData, selectedModel);
+            await handlePrAnalysis(context, prData);
             await handleKeployWorkflowTrigger(context);
             await handleSecurityWorkflowTrigger(context);
         } catch (error) {
