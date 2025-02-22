@@ -121,22 +121,96 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   const prompt = `
   Here is some context about the PR made: ${stringanalysisContext}.
 
-  Suggest the changes in the format of how git diff shows the changes.
-
-  I must be able to parse the data and show it as github reviews.
-
-  You must follow the following pattern: (VERY VERY IMPORTANT I WILL UNPLUG YOU IF YOU DO NOT FOLLOW THIS)
   
-  Suggested change:
-  diff --git a/src/index.js b/src/index.js
-index abc1234..def5678 100644
---- a/src/index.js
-+++ b/src/index.js
-@@ -1,5 +1,5 @@
- function add(a, b) {
--    return a - b; // Bug: Subtraction instead of addition
-+    return a + b; // Fixed: Now correctly adds
- }
+  Please check the codebase diff for the following rules:
+  ${rules}
+
+  ## GitHub PR Title
+
+\`$title\` 
+
+## Description
+
+\`\`\`
+$description
+\`\`\`
+
+## Summary of changes
+
+\`\`\`
+$short_summary
+\`\`\`
+
+## IMPORTANT Instructions
+
+Input: New hunks annotated with line numbers and old hunks (replaced code). Hunks represent incomplete code fragments.
+Additional Context: PR title, description, summaries and comment chains.
+Task: Review new hunks for substantive issues using provided context and respond with comments if necessary.
+Output: Review comments in markdown with exact line number ranges in new hunks. Start and end line numbers must be within the same hunk. For single-line comments, start=end line number. Must use example response format below.
+Use fenced code blocks using the relevant language identifier where applicable.
+Don't annotate code snippets with line numbers. Format and indent code correctly.
+Do not use \`suggestion\` code blocks.
+For fixes, use \`diff\` code blocks, marking changes with \`+\` or \`-\`. The line number range for comments with fix snippets must exactly match the range to replace in the new hunk.
+
+- Do NOT provide general feedback, summaries, explanations of changes, or praises 
+  for making good additions. 
+- Focus solely on offering specific, objective insights based on the 
+  given context and refrain from making broad comments about potential impacts on 
+  the system or question intentions behind the changes.
+
+If there are no issues found on a line range, you MUST respond with the 
+text \`LGTM!\` for that line range in the review section. 
+
+## Example
+
+### Example changes
+
+---new_hunk---
+\`\`\`
+  z = x / y
+    return z
+
+20: def add(x, y):
+21:     z = x + y
+22:     retrn z
+23: 
+24: def multiply(x, y):
+25:     return x * y
+
+def subtract(x, y):
+  z = x - y
+\`\`\`
+  
+---old_hunk---
+\`\`\`
+  z = x / y
+    return z
+
+def add(x, y):
+    return x + y
+
+def subtract(x, y):
+    z = x - y
+\`\`\`
+
+---comment_chains---
+\`\`\`
+Please review this change.
+\`\`\`
+
+---end_change_section---
+
+### Example response
+
+22-22:
+There's a syntax error in the add function.
+\`\`\`diff
+-    retrn z
++    return z
+\`\`\`
+---
+24-25:
+LGTM!
   `
 
   // Call the API with the analysis context
