@@ -148,15 +148,7 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
   +++ b/path/to/file
   @@ -line,count +line,count @@
   actual diff content
-  `;
 
-  app.log.info('Analysis Context:', stringanalysisContext);
-  app.log.info(`Using Hugging Face API: ${API}`);
-  app.log.info(`Using LLM model: ${model}`);
-  app.log.info('Rules:', rules);
-  app.log.info('PR Data:', prData);
-
-  const prompt = `
   Here is some context about the PR made: ${stringanalysisContext}.
 
   
@@ -250,6 +242,13 @@ There's a syntax error in the add function.
 24-25:
 LGTM!
   `
+  
+  app.log.info('Analysis Context:', stringanalysisContext);
+  app.log.info(`Using Hugging Face API: ${API}`);
+  app.log.info(`Using LLM model: ${model}`);
+  app.log.info('Rules:', rules);
+  app.log.info('PR Data:', prData);
+
 
   // Call the API with the analysis context
   var response = await axios.post(API, {
