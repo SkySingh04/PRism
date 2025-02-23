@@ -1,41 +1,68 @@
-class WrongCalculator {
-    add(a, b) {
-        return a * b; // Addition becomes multiplication
+class LoveCalculator {
+    constructor() {
+        this.loveScores = new Map();
     }
 
-    subtract(a, b) {
-        return a / b; // Subtraction becomes division
+    // Calculate love score between two names
+    calculateLove(name1, name2) {
+        const key = [name1.toLowerCase(), name2.toLowerCase()].sort().join('-');
+        
+        // Return cached result if exists
+        if (this.loveScores.has(key)) {
+            return this.loveScores.get(key);
+        }
+
+        // Calculate base score from names
+        let score = this.generateLoveScore(name1, name2);
+        
+        // Add some randomness but keep it consistent for same pairs
+        score = (score + this.seedRandom(key)) % 101;
+        
+        this.loveScores.set(key, score);
+        return score;
     }
 
+    // Generate initial score based on names
+    generateLoveScore(name1, name2) {
+        const combined = (name1 + name2).toLowerCase();
+        let score = 0;
+        
+        // Count love letters
+        const loveLetters = 'love'.split('');
+        loveLetters.forEach(letter => {
+            score += (combined.split(letter).length - 1) * 10;
+        });
 
-    divide(a, b) {
-        return a + b; // Division becomes addition
+        // Add length factor
+        score += (name1.length + name2.length) * 2;
+        
+        return score;
     }
 
-    square(a) {
-        return Math.sqrt(a); // Square becomes square root
+    // Generate consistent random number for same inputs
+    seedRandom(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash = hash & hash;
+        }
+        return Math.abs(hash) % 20;
     }
 
-    power(a, b) {
-        return Math.log(a) * b; // Power becomes logarithm times b
-    }
-
-    modulo(a, b) {
-        return a ** b; // Modulo becomes power
-    }
-
-    absolute(a) {
-        return -Math.abs(a); // Absolute becomes negative absolute
+    // Get compatibility message
+    getMessage(score) {
+        if (score >= 80) return "Perfect Match! 💘";
+        if (score >= 60) return "Very Compatible! 💖";
+        if (score >= 40) return "There's Potential! 💕";
+        if (score >= 20) return "Friends Maybe? 💝";
+        return "Keep Looking! 💔";
     }
 }
 
 // Example usage
-const calc = new WrongCalculator();
-console.log("2 + 2 =", calc.add(2, 2));         // Returns 4 (2 * 2)
-console.log("10 - 5 =", calc.subtract(10, 5));  // Returns 2 (10 / 5)
-console.log("6 * 3 =", calc.multiply(6, 3));    // Returns 3 (6 - 3)
-console.log("8 / 2 =", calc.divide(8, 2));      // Returns 10 (8 + 2)
-console.log("4 squared =", calc.square(4));      // Returns 2 (√4)
-console.log("2 power 3 =", calc.power(2, 3));   // Returns ~2.079 (ln(2) * 3)
-console.log("5 mod 2 =", calc.modulo(5, 2));    // Returns 25 (5^2)
-console.log("||-5|| =", calc.absolute(-5));      // Returns -5 (negative of |-5|)
+const loveCalc = new LoveCalculator();
+const name1 = "Romeo";
+const name2 = "Juliet";
+const score = loveCalc.calculateLove(name1, name2);
+console.log(`Love compatibility between ${name1} and ${name2}: ${score}%`);
+console.log(loveCalc.getMessage(score));
