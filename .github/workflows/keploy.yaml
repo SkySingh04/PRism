@@ -78,7 +78,7 @@ jobs:
         run: |
           cd "$WORKING_DIR"
           go mod download
-          sudo -E keploy test -c "go run main.go" --delay "$DELAY" --path "$KEPLOY_PATH"          
+          sudo -E keploy test -c "go run main.go" --delay "10" --path "."          
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total tests: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_tests.out
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test passed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_passed.out
           grep -oE "COMPLETE TESTRUN SUMMARY\.\s+Total test failed: [0-9]+" report.txt | sed -r "s/\x1B\[[0-9;]*[mGK]//g" > final_total_failed.out
