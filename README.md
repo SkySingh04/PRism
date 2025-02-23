@@ -99,6 +99,16 @@ PRism is free and open-source, but we offer a **cloud-hosted version with enterp
 
 ---
 
+## **👥 Contributing**
+We welcome contributions from the community! Please check our [CONTRIBUTING.md](./CONTRIBUTING.md) guide for:
+- Setting up your development environment
+- Our coding standards and guidelines
+- The pull request process
+
+Looking for something to work on? Check out our [good first issues](https://github.com/SkySingh04/PRism/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) - these are perfect for getting started!
+
+---
+
 ## **📖 Learn More**
 - Visit our [documentation](#) for setup details and advanced usage.
 - Explore the [cloud-hosted version](#) for managed solutions tailored to enterprise needs.
