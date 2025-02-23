@@ -1,5 +1,5 @@
 {
   "useCase": "Performance Optimization",
-  "apiEndpoint": "https://e534-122-166-68-175.ngrok-free.app/api/generate",
+  "apiEndpoint": "http://basedBaba.pythonanywhere.com/api/generate",
   "selectedModel": "llama3"
 }
