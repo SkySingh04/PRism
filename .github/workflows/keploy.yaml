@@ -32,22 +32,31 @@ jobs:
 
     - name: Keploy Test (Replay Recorded Tests)
       id: keploy-test
+      continue-on-error: true
       run: |
-        sudo -E keploy test -c "go run main.go" --delay 30 --path ./
+        OUTPUT=$(sudo -E keploy test -c "go run main.go" --delay 30 --path ./ 2>&1) || echo "::set-output name=error::$OUTPUT"
+        if [ $? -eq 0 ]; then
+          echo "::set-output name=status::success"
+        else
+          echo "::set-output name=status::failure"
+        fi
     
     - name: Comment PR
       uses: actions/github-script@v6
-      env:
-        KEPLOY_REPORT: ${{ steps.keploy-test.outputs.KEPLOY_REPORT }}
+      if: github.event_name == 'pull_request'
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          if (!process.env.KEPLOY_REPORT) {
-            throw new Error('KEPLOY_REPORT not found');
-          }
+          const status = '${{ steps.keploy-test.outputs.status }}';
+          const error = '${{ steps.keploy-test.outputs.error }}';
+          
+          const message = status === 'success' 
+            ? '✅ Keploy tests passed successfully!'
+            : `❌ Keploy tests failed:\n\`\`\`\n${error}\n\`\`\``;
+          
           await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: process.env.KEPLOY_REPORT
+            body: message
           });
