@@ -26,13 +26,12 @@ API Endpoint: ${config?.apiEndpoint || 'Not configured'}
 ### Suggested Models for ${useCase?.name || 'current use case'}:
 ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('\n') || 'No models configured'}
 `;
-
-  // Post config info
-  await context.octokit.issues.createComment({
-    ...context.repo(),
-    issue_number: context.payload.pull_request.number,
-    body: configInfo,
-  });
+  // // Post config info
+  // await context.octokit.issues.createComment({
+  //   ...context.repo(),
+  //   issue_number: context.payload.pull_request.number,
+  //   body: configInfo,
+  // });
 
   // Convert the code changes to a JSON string
   const code_changes = JSON.stringify(prData.code_changes, null, 2); // Adding indentation for better readability
@@ -67,21 +66,21 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
 
   
   // Post the comment to the PR
-  await context.octokit.issues.createComment({
-    ...context.repo(),
-    issue_number: context.payload.pull_request.number,
-    body: analysis,
-  });
+  // await context.octokit.issues.createComment({
+  //   ...context.repo(),
+  //   issue_number: context.payload.pull_request.number,
+  //   body: analysis,
+  // });
 
   // Get the rules for LLM
   const rules = await getRulesForLLM(context);
 
   // If the rules are fetched successfully, post them as a comment
-  await context.octokit.issues.createComment({
-    ...context.repo(),
-    issue_number: context.payload.pull_request.number,
-    body: rules.success ? rules.rules : rules.error,
-  });
+  // await context.octokit.issues.createComment({
+  //   ...context.repo(),
+  //   issue_number: context.payload.pull_request.number,
+  //   body: rules.success ? rules.rules : rules.error,
+  // });
 
   // call the LLM analysis function with selected model
   const llmOutput = await analyzeLLM(prData, rules.rules , API  , model, app);
