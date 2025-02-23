@@ -3,14 +3,10 @@ name: Keploy Test
 on:
   push:
     branches:
-      - prod
-      - staging
-      - feature/**
+      - main
   pull_request:
     branches:
-      - prod
-      - staging
-      - feature/**
+      - main
 
 jobs:
   my_job:
