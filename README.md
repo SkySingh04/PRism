@@ -105,6 +105,8 @@ We welcome contributions from the community! Please check our [CONTRIBUTING.md](
 - Our coding standards and guidelines
 - The pull request process
 
+Looking for something to work on? Check out our [good first issues](https://github.com/SkySingh04/PRism/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) - these are perfect for getting started!
+
 ---
 
 ## **📖 Learn More**
