@@ -91,6 +91,12 @@ For a team using GitHub for code and documentation:
 
 ---
 
+DEMO VIDEO : 
+
+https://github.com/user-attachments/assets/8ee879b8-3200-41bd-a015-674db3e13534
+
+
+
 ## **Monetization Model**
 PRism is free and open-source, but we offer a **cloud-hosted version with enterprise support** that includes:
 - Managed hosting for PRism and LLMs.
