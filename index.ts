@@ -14,6 +14,7 @@ import { promptUserConfig } from './src/cli.js';
 import { reviewPR } from './diffparser.js';
 import { handleLintWorkflowTrigger } from "./lint.js";
 import { App, Config, GithubContext } from "./types.js";
+import { savePrAsPdf } from "./pdf-export.js";
 
 let config: Config;
 
@@ -43,6 +44,24 @@ export default async (app: App) => {
             // app.log.info(JSON.stringify(stringllmOutput), "LLM analysis complete");
             await reviewPR(context as any, app, llmOutput);
             // await reviewPR(context, app);
+            
+            // Export PR data to PDF
+            try {
+                const { owner, repo } = context.repo();
+                const prNumber = context.payload.pull_request.number;
+                const pdfFilename = await savePrAsPdf(prData, owner, repo, prNumber);
+                app.log.info(`PR exported to PDF: ${pdfFilename}`);
+                
+                // Post comment with PDF info
+                await context.octokit.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: prNumber,
+                    body: `📄 PR summary has been exported as PDF: ${pdfFilename}`
+                });
+            } catch (pdfError) {
+                app.log.error("Failed to export PR as PDF", pdfError);
+            }
             
             // Run all workflow triggers in parallel
             await Promise.all([
