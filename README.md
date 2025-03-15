@@ -1,124 +1,175 @@
-# PRism: Open-Source AI-Driven Code Review Tool
+# PRism: AI-Driven Code Review Tool
 
-**Say Goodbye to Tedious Code Reviews—and Hello to Flexible AI-Driven Reviews**
+**Streamline your code reviews with flexible, AI-powered analysis**
 
-PRism is an open-source, self-hosted AI-powered tool designed to automate and enhance reviews of code, documentation, and more. It empowers teams to enforce standards, streamline workflows, and improve security without vendor lock-in or hidden costs. Whether running locally, on private servers, or in the cloud, PRism gives you the flexibility to choose any language model (LLM), including self-hosted ones via Ollama or open-source alternatives.
+PRism is an open-source, self-hosted AI tool designed to automate and enhance reviews of code, documentation, and more. It empowers teams to enforce standards, streamline workflows, and improve security without vendor lock-in or hidden costs. Choose any language model (LLM), including self-hosted ones via Ollama or open-source alternatives.
 
----
-
-## **🌟 Key Features**
+## 🌟 Key Features
 
 ### 1️⃣ **Customizable Review Rules**
-- Define your team's standards in a `RULES.md`, YAML, or JSON file.
-- Use PRism to enforce:
-  - **For code**: Naming conventions, logging consistency, and error handling practices.
-  - **For documentation**: Grammar, formatting, and style guidelines.
-  - **For security**: Framework-specific best practices and OWASP standards.
-- Example: PRism flags snake_case variables in a camelCase project or suggests clearer documentation phrasing.
+- Define your team's standards in a `RULES.md`, YAML, or JSON file
+- Enforce coding standards, documentation guidelines, and security best practices
+- Automatically flag inconsistencies like mixed naming conventions or inadequate error handling
 
 ### 2️⃣ **Static Analysis + AI-Powered Review**
-- Combines traditional tools (like ESLint or GolangCI-Lint) with advanced AI reasoning to:
-  - Analyze PRs based on `RULES.md`.
-  - Highlight style, security, and architectural concerns.
-  - Suggest improvements for both code and documentation.
+- Combines traditional static analysis with advanced AI reasoning
+- Analyzes PRs based on your custom rule set
+- Highlights style, security, and architectural concerns
+- Provides actionable improvement suggestions
 
-### 3️⃣ **LLM Recommendation System**
-PRism includes a **built-in frontend** to guide users in selecting the best LLM for their use case:
-- For **code reviews**: Opt for models like OpenAI Codex or Mistral.
-- For **documentation reviews**: Use AI better suited for writing, such as GPT-4 or Claude.
-- Recommendations include:
-  - Open-source models for privacy-conscious users.
-  - Cloud-hosted APIs for rapid setup.
-  - **Cost estimates** for closed-source models, helping teams budget their usage.
+### 3️⃣ **Flexible LLM Integration**
+- Choose the best model for your specific use case:
+  - For code reviews: Models like OpenAI Codex or Mistral
+  - For documentation: Models better suited for writing, such as GPT-4 or Claude
+- Supports both open-source and commercial LLMs
+- Configure via `prism-config.json` file
 
-### 4️⃣ **Flexible Hosting Options**
-- Run PRism locally, on private servers, or in the cloud:
-  - **Self-hosted** LLMs via Ollama for maximum privacy and control.
-  - **Cloud-based APIs** like OpenAI or Google Vertex AI for quick deployment.
-- Fully customizable to balance performance, cost, and context-length needs.
+### 4️⃣ **GitHub Integration**
+- Automatically reviews pull requests when opened or updated
+- Provides inline comments directly in your PRs
+- Works with your existing GitHub workflow
 
-### 5️⃣ **More Than Just Code**
-PRism can review more than code—use it to:
-- Evaluate technical documentation for clarity and consistency.
-- Assess markdown or YAML files for formatting and adherence to standards.
-- Extend beyond development teams to writers, marketers, and DevOps workflows.
+## 🚀 Setup Instructions
 
----
+### Prerequisites
+- Node.js v18 or higher
+- npm or yarn
+- GitHub account and repository (for GitHub integration)
 
-## **💡 How It Works**
-1. **Input**: PRism reads your `RULES.md` and any files you've selected for review (code, documentation, or both).
-2. **Analysis**:
-   - Static analysis identifies common issues.
-   - LLMs process nuanced requirements like tone, consistency, or security.
-3. **Output**: Feedback is provided via:
-   - PR comments in GitHub/GitLab/Bitbucket.
-   - CLI results for local review.
-   - Detailed JSON, Markdown, or PDF reports.
+### Installation
 
----
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/SkySingh04/PRism.git
+   cd PRism
+   ```
 
-## **🚀 Getting Started**
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### **Step 1: Define Your Rules**
-Create a `RULES.md` file with your team's standards:
-- For code: Naming conventions, error handling, logging structure.
-- For documentation: Grammar rules, formatting styles, or tone guidelines.
+3. **Configure PRism**
+   Run the CLI configuration tool to set up PRism for your use case:
+   ```bash
+   npm run dev
+   ```
+   
+   This will prompt you to select:
+   - Your use case (code review, documentation review, etc.)
+   - API endpoint for your LLM
+   - Preferred language model
 
-### **Step 2: Choose Your LLM**
-Use PRism's frontend to get personalized recommendations for:
-- The best LLM for your use case (code, documentation, or both).
-- Cost estimates for closed-source APIs like OpenAI.
-- Open-source alternatives for teams prioritizing privacy.
+   Alternatively, you can manually create a `prism-config.json` file in the project root:
+   ```json
+   {
+     "useCase": "Code Review",
+     "apiEndpoint": "YOUR_LLM_API_ENDPOINT",
+     "selectedModel": "YOUR_PREFERRED_MODEL"
+   }
+   ```
 
-### **Step 3: Run PRism**
-- Integrate PRism into your CI/CD pipeline for automated pre-merge checks.
-- Use the CLI tool to review locally before pushing changes.
-- Schedule periodic reviews to ensure codebase health.
+4. **Setup GitHub App (for GitHub integration)**
+   
+   - Create a new GitHub App in your GitHub account
+   - Set the following permissions:
+     - Pull requests: Read & Write
+     - Repository contents: Read
+   - Subscribe to pull request events
+   - Generate and download a private key
+   - Install the app on your repositories
+   - Configure environment variables (create a `.env` file):
+     ```
+     APP_ID=your_github_app_id
+     PRIVATE_KEY=your_github_app_private_key
+     WEBHOOK_SECRET=your_webhook_secret
+     ```
 
----
+5. **Start PRism**
+   ```bash
+   npm start
+   ```
 
-## **🤔 Why PRism?**
-PRism is designed for developers, writers, and teams who want:
-- Full control over their workflows without vendor lock-in.
-- Flexibility to adapt AI to diverse tasks like reviewing documentation or analyzing code.
-- A scalable, cost-transparent solution for AI-powered reviews.
+## 📋 Usage
 
-### **Real-World Example**
-For a team using GitHub for code and documentation:
-- Use GPT-4 for reviewing technical docs (better at writing than coding).
-- Leverage Codex or Mistral for code-related tasks.
-- Customize prompts for each type of review for best results.
+### Define Review Rules
+Create a `RULES.md` file in your repository with your team's standards:
 
----
+```markdown
+# Code Review Rules
 
-### DEMO VIDEO : 
+## Naming Conventions
+- Use camelCase for variables and functions
+- Use PascalCase for classes and interfaces
 
-https://github.com/user-attachments/assets/8ee879b8-3200-41bd-a015-674db3e13534
+## Error Handling
+- All errors must be properly caught and logged
+- No empty catch blocks allowed
 
+## Documentation
+- All public functions must have JSDoc comments
+- Include examples for complex functions
+```
 
+### Running PRism Locally
+To review code locally before committing:
 
-## **Monetization Model**
-PRism is free and open-source, but we offer a **cloud-hosted version with enterprise support** that includes:
-- Managed hosting for PRism and LLMs.
-- Enhanced scalability and performance for large repositories.
-- Dedicated customer support for troubleshooting and customizations.
+```bash
+npm run start
+```
 
----
+### GitHub Integration
+Once configured, PRism will automatically:
+1. Monitor pull requests in repositories where the GitHub App is installed
+2. Analyze the code changes against your defined rules
+3. Provide feedback as comments directly in the PR
 
-## **👥 Contributing**
+## 🔧 Advanced Configuration
+
+### Custom LLM Configuration
+For using specific LLMs, update your `prism-config.json`:
+
+```json
+{
+  "useCase": "Security Review",
+  "apiEndpoint": "https://api.openai.com/v1/chat/completions",
+  "selectedModel": "gpt-4"
+}
+```
+
+### Extending Rules
+PRism supports multiple rule formats:
+- `RULES.md` for human-readable rules
+- JSON or YAML for machine-optimized rules
+
+## 👥 Contributing
+
 We welcome contributions from the community! Please check our [CONTRIBUTING.md](./CONTRIBUTING.md) guide for:
-- Setting up your development environment
-- Our coding standards and guidelines
-- The pull request process
 
-Looking for something to work on? Check out our [good first issues](https://github.com/SkySingh04/PRism/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22) - these are perfect for getting started!
+1. **Development Setup**
+   - Fork and clone the repository
+   - Install dependencies: `npm install`
+   - Start the development server: `npm run start`
+
+2. **Coding Standards**
+   - Use TypeScript for all new code
+   - Follow the existing code style
+   - Add comments for complex logic
+   - Include tests for new features
+
+3. **Pull Request Process**
+   - Create a branch for your changes
+   - Make your changes and commit them
+   - Write clear commit messages
+   - Update documentation if needed
+   - Submit a PR with a description of your changes
+
+Looking for something to work on? Check out our good first issues - these are perfect for getting started!
+
+## 📄 License
+
+This project is licensed under the ISC License - see the [LICENSE](./LICENSE) file for details.
 
 ---
 
-## **📖 Learn More**
-- Visit our [documentation](#) for setup details and advanced usage.
-- Explore the [cloud-hosted version](#) for managed solutions tailored to enterprise needs.
-
----
-
-PRism isn’t just a tool—it’s a customizable, AI-driven partner for code and documentation reviews. Let it help you unlock new levels of productivity and consistency across your projects. Try it today!
+PRism isn't just a tool—it's a customizable, AI-driven partner for code and documentation reviews. Let it help you unlock new levels of productivity and consistency across your projects. Try it today!
