@@ -166,6 +166,10 @@ We welcome contributions from the community! Please check our [CONTRIBUTING.md](
 
 Looking for something to work on? Check out our good first issues - these are perfect for getting started!
 
+### DEMO VIDEO : 
+
+https://github.com/user-attachments/assets/8ee879b8-3200-41bd-a015-674db3e13534
+
 ## 📄 License
 
 This project is licensed under the ISC License - see the [LICENSE](./LICENSE) file for details.
