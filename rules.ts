@@ -1,35 +1,32 @@
-export async function getRulesForLLM(context: any) {
+import { GithubContext, Rules } from './types.js';
+
+export async function getRulesForLLM(context: GithubContext): Promise<Rules> {
+  try {
     const { owner, repo } = context.repo();
-    const { ref } = context.payload.pull_request.head;
-  
-    try {
-      const response = await context.octokit.repos.getContent({
-        owner,
-        repo, 
-        path: 'rules.md',
-        ref
-      });
-  
+    const response = await context.octokit.repos.getContent({
+      owner,
+      repo,
+      path: 'rules.md',
+      ref: context.payload.pull_request?.head?.ref
+    });
+
+    // Check if the response is valid and contains content
+    if (response.data && 'content' in response.data && response.data.content) {
       const content = Buffer.from(response.data.content, 'base64').toString();
-      
-      return {
-        success: true,
-        rules: content,
-        metadata: {
-          ref,
-          repo: `${owner}/${repo}`,
-          timestamp: new Date().toISOString()
-        }
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.status === 404 ? 'Rules file not found' : 'Failed to fetch rules',
-        metadata: {
-          ref,
-          repo: `${owner}/${repo}`,
-          timestamp: new Date().toISOString()
-        }
-      };
+      return { success: true, rules: content };
     }
+
+    return {
+      success: false,
+      rules: '',
+      error: 'Failed to load rules.md - missing or invalid content'
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return {
+      success: false,
+      rules: 'No specific rules found. Please follow general good practices.',
+      error: `Error loading rules.md: ${errorMessage}`
+    };
   }
+}

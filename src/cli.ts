@@ -5,12 +5,15 @@ import chalk from 'chalk';  // This will be fixed by package.json update
 
 export async function promptUserConfig(): Promise<UserConfig> {
     // Check for existing config
-    const existingConfig = loadConfig();
-    if (existingConfig) {
+    const configResult = loadConfig();
+    if (configResult.success) {
+        const existingConfig = configResult.value;
         console.log(chalk.cyan('Using existing configuration:'));
         console.log(`Use Case: ${existingConfig.useCase}`);
         console.log(`API Endpoint: ${existingConfig.apiEndpoint}`);
         return existingConfig;
+    } else {
+        console.log(chalk.yellow(`No existing configuration found or error loading: ${configResult.error.message}`));
     }
 
     // Get use case

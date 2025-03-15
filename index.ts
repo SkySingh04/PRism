@@ -13,13 +13,11 @@ import { handleSecurityWorkflowTrigger } from "./security.js";
 import { promptUserConfig } from './src/cli.js';
 import { reviewPR } from './diffparser.js';
 import { handleLintWorkflowTrigger } from "./lint.js";
+import { App, Config, GithubContext } from "./types.js";
 
-let config: any;
+let config: Config;
 
-export default async (app: {
-    log: { info: (arg0: string, arg1?: string) => void };
-    on: (arg0: string[], arg1: (context: any) => Promise<void>) => void;
-}) => {
+export default async (app: App) => {
     try {
         // Get user configuration through CLI
         config = await promptUserConfig();
@@ -27,29 +25,37 @@ export default async (app: {
         app.log.info(`Initialized with API url: ${config.apiEndpoint} for use case: ${config.useCase} and model : ${config.selectedModel}`);
     } catch (error) {
         app.log.info("Failed to get user configuration");
-        process.exit(1);
+        // Using Node.js process API
+        if (typeof process !== 'undefined') {
+            process.exit(1);
+        }
     }
 
     app.log.info("Yay, the app was loaded!");
 
-    const handlePrEvent = async (context: any) => {
+    const handlePrEvent = async (context: GithubContext) => {
         try {
             const prData = await getAllPrDetails(context, app);
-            app.log.info(JSON.stringify(prData), "Full PR data collected");
+            app.log.info("Full PR data collected", { prData: JSON.stringify(prData) });
 
             const llmOutput = await handlePrAnalysis(context, prData , config.apiEndpoint , config.selectedModel, app);
             // const stringllmOutput = await JSON.stringify(llmOutput);
             // app.log.info(JSON.stringify(stringllmOutput), "LLM analysis complete");
-            await reviewPR(context, app, llmOutput);
+            await reviewPR(context as any, app, llmOutput);
             // await reviewPR(context, app);
             
-            // await handleKeployWorkflowTrigger(context);  
-            // await handleSecurityWorkflowTrigger(context);
-            // await handleLintWorkflowTrigger(context);    
+            // Run all workflow triggers in parallel
+            await Promise.all([
+                handleKeployWorkflowTrigger(context),  
+                handleSecurityWorkflowTrigger(context),
+                handleLintWorkflowTrigger(context)
+            ]);
         } catch (error) {
             await handleError(context, app, error);
         }
     };
 
-    app.on(["pull_request.opened", "pull_request.synchronize"], handlePrEvent);
+    if (app.on) {
+        app.on(["pull_request.opened", "pull_request.synchronize"], handlePrEvent);
+    }
 };

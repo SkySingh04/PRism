@@ -3,25 +3,35 @@ import { getRulesForLLM } from './rules.js';
 import { loadConfig } from './src/config/userConfig.js';
 import { useCaseModels } from './src/config/models.js';
 import { determineLabelFromAnalysis, addLabelToPR } from './src/addLabel.js';
+import { App, GithubContext, PRData, IssueComment, Config } from './types.js';
 // import { createInlineCommentsFromDiff } from './diffparser.js';
 
-
 export async function handlePrAnalysis(
-  context: { 
-    octokit: { issues: { createComment: (arg0: any) => any; }; }; 
-    repo: () => any; 
-    payload: { pull_request: { number: any; }; }; 
-  }, 
-  prData: any, API : string, model: string , app: any
+  context: GithubContext, 
+  prData: PRData, 
+  API: string, 
+  model: string, 
+  app: App
 ) {
   // Load current configuration
-  const config = loadConfig();
-  const useCase = config ? useCaseModels[config.useCase] : null;
+  const configResult = loadConfig();
+  let useCase = null;
+  let useCaseStr = 'Not configured';
+  let apiEndpoint = 'Not configured';
+  
+  if (configResult.success) {
+    const config = configResult.value;
+    useCase = useCaseModels[config.useCase];
+    useCaseStr = config.useCase;
+    apiEndpoint = config.apiEndpoint;
+  } else {
+    app.log.error(`Failed to load configuration: ${configResult.error.message}`);
+  }
 
   // Build the config info comment
-  const configInfo = `## PRism Configuration
-Use Case: ${config?.useCase || 'Not configured'}
-API Endpoint: ${config?.apiEndpoint || 'Not configured'}
+  const configInfo = `## Keploy Configuration
+Use Case: ${useCaseStr}
+API Endpoint: ${apiEndpoint}
 
 ### Suggested Models for ${useCase?.name || 'current use case'}:
 ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('\n') || 'No models configured'}
@@ -37,20 +47,22 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   const code_changes = JSON.stringify(prData.code_changes, null, 2); // Adding indentation for better readability
 
   // Build the issue context if available
-  const issueContext = prData.linked_issue ? `
-  Linked Issue:
-  Number: #${prData.linked_issue.number}
-  Title: ${prData.linked_issue.title}
-  Description: ${prData.linked_issue.body}
-  State: ${prData.linked_issue.state}
-  Labels: ${prData.linked_issue.labels.join(', ')}
-  Assignees: ${prData.linked_issue.assignees.join(', ')}
+  const issueContext = prData.linked_issues && prData.linked_issues.issues_count > 0 ? `
+  Linked Issues (${prData.linked_issues.issues_count}):
+  ${prData.linked_issues.issues.map(issue => `
+  Number: #${issue.number}
+  Title: ${issue.title}
+  Description: ${issue.body}
+  State: ${issue.state}
+  Labels: ${issue.labels.join(', ')}
+  Assignees: ${issue.assignees.join(', ')}
   
   Issue Discussion:
-  ${prData.linked_issue.comments.map((c: any) => 
+  ${issue.comments.map((c: IssueComment) => 
     `${c.author} (${c.created_at}): ${c.body}`
   ).join('\n')}
-  ` : 'No linked issue found';
+  `).join('\n')}
+  ` : 'No linked issues found';
 
   // Build the analysis comment
   const analysis = `PR Analysis using ${API}:
@@ -83,7 +95,7 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   // });
 
   // call the LLM analysis function with selected model
-  const llmOutput = await analyzeLLM(prData, rules.rules , API  , model, app);
+  const llmOutput = await analyzeLLM(prData, rules.rules, API, model, app);
 
   // Determine and add appropriate label
   const labelToAdd = await determineLabelFromAnalysis(llmOutput);
@@ -92,8 +104,7 @@ ${useCase?.suggestedModels.map(model => `- ${model.name}: ${model.link}`).join('
   return llmOutput;
 }
 
-;
-export async function analyzeLLM(prData: any, rules: any, API: string, model: string , app : any) {
+export async function analyzeLLM(prData: PRData, rules: string, API: string, model: string, app: App) {
   const analysisContext = {
     repository: {
       name: prData.repository.name,
@@ -103,15 +114,16 @@ export async function analyzeLLM(prData: any, rules: any, API: string, model: st
     },
     pr: prData,
     rules: rules,
-    issue_context: prData.linked_issue ? {
-      issue_number: prData.linked_issue.number,
-      issue_title: prData.linked_issue.title,
-      issue_description: prData.linked_issue.body,
-      issue_status: prData.linked_issue.state,
-      issue_labels: prData.linked_issue.labels,
-      issue_assignees: prData.linked_issue.assignees,
-      issue_discussion: prData.linked_issue.comments
-    } : null
+    issue_context: prData.linked_issues && prData.linked_issues.issues_count > 0 ? 
+      prData.linked_issues.issues.map(issue => ({
+        issue_number: issue.number,
+        issue_title: issue.title,
+        issue_description: issue.body,
+        issue_status: issue.state,
+        issue_labels: issue.labels,
+        issue_assignees: issue.assignees,
+        issue_discussion: issue.comments
+      })) : null
   };
 
   const stringanalysisContext = JSON.stringify(analysisContext, null, 2);
@@ -240,23 +252,34 @@ There's a syntax error in the add function.
 LGTM!
   `
   
-  app.log.info('Analysis Context:', stringanalysisContext);
+  app.log.info('Analysis Context:', { context: stringanalysisContext });
   app.log.info(`Using Hugging Face API: ${API}`);
   app.log.info(`Using LLM model: ${model}`);
-  app.log.info('Rules:', rules);
-  app.log.info('PR Data:', prData);
+  app.log.info('Rules:', { rules });
+  app.log.info('PR Data:', { prData: JSON.stringify(prData, null, 2) });
 
 
   // Call the API with the analysis context
-  var response = await axios.post(API, {
-    model: model,
-    prompt
-  });
+  try {
+    const response = await axios.post(API, {
+      model: model,
+      prompt: prompt,
+      // max_tokens: 2000,
+      temperature: 0.7,
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-  // const stringResp = await JSON.stringify(response.data, null, 2);
-  // app.log.info('API Response:',stringResp);
-  return response.data.response;
-  
+    app.log.info('LLM API response:', response.data);
+
+    // Assuming the response data contains a 'generated_text' field with the analysis
+    return response.data.generated_text || response.data;
+  } catch (error) {
+    app.log.error('Error calling LLM API:', error);
+    return `Error analyzing PR: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
 }
 
 

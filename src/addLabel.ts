@@ -1,3 +1,5 @@
+import { GithubContext } from '../types.js';
+
 interface LabelOptions {
     name: string;
     color: string;
@@ -27,26 +29,41 @@ export async function determineLabelFromAnalysis(llmResponse: string): Promise<s
     
     if (lowerResponse.includes('lgtm!')) {
         return 'LGTM';
-    } else if (lowerResponse.includes('spam') || lowerResponse.length < 10) {
+    } else if (lowerResponse.includes('spam') || 
+              (lowerResponse.length < 10 && !isValidShortResponse(lowerResponse))) {
         return 'Spam';
     } else {
         return 'Needs Changes';
     }
 }
 
+// Helper function to identify valid short responses
+function isValidShortResponse(response: string): boolean {
+    const validShortResponses = [
+        'ok', 'yes', 'no', 'good', 'fine', 'nice', 'approved', '+1'
+    ];
+    return validShortResponses.some(valid => response.includes(valid));
+}
+
 export async function addLabelToPR(
-    context: any,
+    context: GithubContext,
     prNumber: number,
     labelName: string
-) {
+): Promise<boolean> {
     try {
         // Remove existing review labels first
         const existingLabels = Object.keys(LABEL_CONFIGS);
-        await context.octokit.issues.removeLabel({
-            ...context.repo(),
-            issue_number: prNumber,
-            name: existingLabels
-        }).catch(() => {/* Ignore errors if labels don't exist */});
+        
+        // Remove labels in parallel with Promise.all
+        await Promise.all(
+            existingLabels.map(label => 
+                context.octokit.issues.removeLabel({
+                    ...context.repo(),
+                    issue_number: prNumber,
+                    name: label
+                }).catch(() => {/* Ignore errors if labels don't exist */})
+            )
+        );
 
         // Add new label
         await context.octokit.issues.addLabels({

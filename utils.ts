@@ -1,22 +1,37 @@
-export function formatComment(comment : any) {
-    return {
-      id: comment.id,
-      user: comment.user?.login,
-      body: comment.body,
-      created_at: comment.created_at,
-      updated_at: comment.updated_at,
-      url: comment.html_url
-    };
-  }
+import { App, GithubContext, Comment } from './types.js';
 
-  // Error handler
-export async function handleError(context: { octokit: { issues: { createComment: (arg0: any) => any; }; }; repo: () => any; payload: { pull_request: { number: any; }; }; }, app: { log: any; on?: (arg0: string[], arg1: (context: any) => Promise<void>) => void; }, error: any) {
-    app.log.error('PR processing error:');
-    app.log.error(error.message);
-    
-    await context.octokit.issues.createComment({
+export function formatComment(comment: Comment): string {
+  return `
+Comment by ${comment.user} (${comment.created_at}):
+${comment.body}
+---
+`;
+}
+
+// Error handler
+export async function handleError(
+  context: GithubContext, 
+  app: App, 
+  error: Error | unknown
+): Promise<void> {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+  
+  app.log.error('Error processing PR:', error);
+  
+  try {
+    const commentParams = {
       ...context.repo(),
       issue_number: context.payload.pull_request.number,
-      body: '❌ Error processing PR: ' + error.message
-    });
+      body: `## Error Processing PR
+An error occurred while analyzing this PR:
+\`\`\`
+${errorMessage}
+\`\`\`
+Please check the application logs for more details.`
+    };
+    
+    await context.octokit.issues.createComment(commentParams);
+  } catch (commentError) {
+    app.log.error('Failed to post error comment:', commentError);
   }
+}
