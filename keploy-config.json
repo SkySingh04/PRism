@@ -1,0 +1,5 @@
+{
+  "useCase": "Documentation",
+  "apiEndpoint": "https://akashsingh.pythonanywhere.com/api/generate",
+  "selectedModel": "llama2"
+}
